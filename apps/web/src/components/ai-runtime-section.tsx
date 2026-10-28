@@ -1,10 +1,5 @@
 import { AI_MODEL_PRESETS } from "@kynos/shared";
-import type {
-  AIProvider,
-  AppSettings,
-  AutoReplyMode,
-  ReasoningEffort,
-} from "@kynos/shared";
+import type { AIProvider, AppSettings, ReasoningEffort } from "@kynos/shared";
 import {
   ArrowsClockwise,
   Brain,
@@ -575,20 +570,13 @@ export const AiRuntimeSection = ({
           </div>
           <div className="space-y-1.5">
             <p className="text-[11px] leading-none font-medium text-zinc-400">
-              Reply scope
+              Group access
             </p>
-            <Segmented
-              onChange={(v) =>
-                setSettings((prev) => ({ ...prev, auto_reply_mode: v }))
-              }
-              options={[
-                { label: "all chats", value: "all" as AutoReplyMode },
-                { label: "direct", value: "direct_only" as AutoReplyMode },
-                { label: "groups", value: "group_only" as AutoReplyMode },
-                { label: "commands", value: "disabled" as AutoReplyMode },
-              ]}
-              value={settings.auto_reply_mode}
-            />
+            <p className="text-[10px] leading-relaxed text-zinc-600">
+              DMs always get auto-replies. In groups the bot answers only when
+              mentioned or its message is quoted; restrict which groups via the
+              Gateway panel.
+            </p>
           </div>
         </div>
 

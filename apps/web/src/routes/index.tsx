@@ -21,6 +21,7 @@ import {
   Terminal,
   TerminalWindow,
   Trash,
+  UsersThree,
   Wrench,
 } from "@phosphor-icons/react";
 import { createFileRoute } from "@tanstack/react-router";
@@ -121,9 +122,11 @@ const COMMAND_REF = [
 ];
 
 const GatewaySection = ({
+  setSettings,
   settings,
   state,
 }: {
+  setSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
   settings: AppSettings;
   state: BotState;
 }) => {
@@ -227,7 +230,12 @@ const GatewaySection = ({
           <dl>
             {[
               ["Command prefix", settings.bot_prefix],
-              ["Reply scope", settings.auto_reply_mode],
+              [
+                "Group access",
+                settings.allowed_groups.length === 0
+                  ? "all groups"
+                  : `${settings.allowed_groups.length} allowed`,
+              ],
               ["Sticker pack", settings.sticker_pack_name],
               ["Reasoning", settings.ai_reasoning_effort],
             ].map(([k, v], i) => (
@@ -244,6 +252,44 @@ const GatewaySection = ({
               </div>
             ))}
           </dl>
+        </div>
+
+        <div className="rounded-md border border-white/[0.07] bg-[#0a0a0d]">
+          <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-2.5">
+            <div className="flex items-center gap-2">
+              <UsersThree className="h-3.5 w-3.5 text-zinc-500" />
+              <h2 className="text-[13px] font-semibold tracking-tight text-zinc-100">
+                Group access
+              </h2>
+            </div>
+            <Badge variant="secondary">
+              {settings.allowed_groups.length === 0
+                ? "all groups"
+                : settings.allowed_groups.length}
+            </Badge>
+          </div>
+          <div className="space-y-2 p-4">
+            <Textarea
+              className="font-mono text-[11px]"
+              onChange={(e) =>
+                setSettings((prev) => ({
+                  ...prev,
+                  allowed_groups: e.target.value
+                    .split("\n")
+                    .map((s) => s.trim())
+                    .filter(Boolean),
+                }))
+              }
+              placeholder={"12036xxxxx@g.us\n12036yyyyy@g.us"}
+              rows={3}
+              value={settings.allowed_groups.join("\n")}
+            />
+            <p className="text-[10px] leading-relaxed text-zinc-600">
+              One group JID per line. Empty = every group. The bot only answers
+              in groups when mentioned or its message is quoted; DMs always get
+              replies.
+            </p>
+          </div>
         </div>
 
         <div className="rounded-md border border-white/[0.07] bg-[#0a0a0d]">
@@ -803,7 +849,11 @@ const DashboardPage = () => {
           </div>
 
           {activeNav === "gateway" && (
-            <GatewaySection settings={settings} state={state} />
+            <GatewaySection
+              setSettings={setSettings}
+              settings={settings}
+              state={state}
+            />
           )}
           {activeNav === "ai_runtime" && (
             <AiRuntimeSection
