@@ -1,7 +1,5 @@
 import { describe, expect, it } from "bun:test";
 
-import { AVAILABLE_TOOLS } from "@kynos/shared";
-
 import {
   initDatabase,
   getSettings,
@@ -20,6 +18,7 @@ import {
   addAuditLog,
   getAuditLogs,
 } from "@kynos/db";
+import { AVAILABLE_TOOLS } from "@kynos/shared";
 
 describe("Database Repository (Drizzle ORM)", () => {
   initDatabase();
@@ -46,6 +45,23 @@ describe("Database Repository (Drizzle ORM)", () => {
     expect(withGroups.allowed_groups).toEqual(["12036aaa@g.us"]);
     updateSettings({ allowed_groups: [] });
     expect(getSettings().allowed_groups).toEqual([]);
+  });
+
+  it("normalizes allowed_users into bare whatsapp JIDs", () => {
+    const normalized = updateSettings({
+      allowed_users: [
+        "+62 812-3456-7890",
+        "628999@s.whatsapp.net",
+        "12036a@g.us",
+        "abc",
+      ],
+    });
+    expect(normalized.allowed_users).toEqual([
+      "6281234567890@s.whatsapp.net",
+      "628999@s.whatsapp.net",
+    ]);
+    updateSettings({ allowed_users: [] });
+    expect(getSettings().allowed_users).toEqual([]);
   });
 
   it("keeps tools_enabled as unique registry ids and honors an empty list", () => {

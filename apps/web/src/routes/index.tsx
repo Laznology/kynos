@@ -230,12 +230,8 @@ const GatewaySection = ({
           <dl>
             {[
               ["Command prefix", settings.bot_prefix],
-              [
-                "Group access",
-                settings.allowed_groups.length === 0
-                  ? "all groups"
-                  : `${settings.allowed_groups.length} allowed`,
-              ],
+              ["Group access", `${settings.allowed_groups.length} allowed`],
+              ["Private access", `${settings.allowed_users.length} allowed`],
               ["Sticker pack", settings.sticker_pack_name],
               ["Reasoning", settings.ai_reasoning_effort],
             ].map(([k, v], i) => (
@@ -262,11 +258,7 @@ const GatewaySection = ({
                 Group access
               </h2>
             </div>
-            <Badge variant="secondary">
-              {settings.allowed_groups.length === 0
-                ? "all groups"
-                : settings.allowed_groups.length}
-            </Badge>
+            <Badge variant="secondary">{settings.allowed_groups.length}</Badge>
           </div>
           <div className="space-y-2 p-4">
             <Textarea
@@ -285,9 +277,60 @@ const GatewaySection = ({
               value={settings.allowed_groups.join("\n")}
             />
             <p className="text-[10px] leading-relaxed text-zinc-600">
-              One group JID per line. Empty = every group. The bot only answers
-              in groups when mentioned or its message is quoted; DMs always get
-              replies.
+              One group JID per line. Empty = no group is served. The bot only
+              answers in an allowed group when mentioned or its message is
+              quoted.
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-md border border-white/[0.07] bg-[#0a0a0d]">
+          <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-2.5">
+            <div className="flex items-center gap-2">
+              <UsersThree className="h-3.5 w-3.5 text-zinc-500" />
+              <h2 className="text-[13px] font-semibold tracking-tight text-zinc-100">
+                Private access
+              </h2>
+            </div>
+            <Badge variant="secondary">{settings.allowed_users.length}</Badge>
+          </div>
+          <div className="space-y-3 p-4">
+            <Textarea
+              className="font-mono text-[11px]"
+              onChange={(e) =>
+                setSettings((prev) => ({
+                  ...prev,
+                  allowed_users: e.target.value
+                    .split("\n")
+                    .map((s) => s.trim())
+                    .filter(Boolean),
+                }))
+              }
+              placeholder={"6281234567890\n+62 812-3456-7890"}
+              rows={3}
+              value={settings.allowed_users.join("\n")}
+            />
+            <div className="space-y-1.5">
+              <Label className="text-[11px] text-zinc-500" htmlFor="owner_jid">
+                Owner handle
+              </Label>
+              <Input
+                className="font-mono text-[11px]"
+                id="owner_jid"
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    owner_jid: e.target.value,
+                  }))
+                }
+                placeholder="@ilazer"
+                value={settings.owner_jid}
+              />
+            </div>
+            <p className="text-[10px] leading-relaxed text-zinc-600">
+              One phone number per line, country code included; saved as
+              62xxx@s.whatsapp.net. Empty = no DM is served. The handle is
+              quoted in the denial reply sent to unlisted chats.
             </p>
           </div>
         </div>

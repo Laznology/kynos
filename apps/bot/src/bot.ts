@@ -28,7 +28,13 @@ import { renderSVG } from "uqr";
 import { runKynosAgent } from "./agent";
 import { dispatchCommand } from "./commands";
 import type { CommandContext } from "./commands";
-import { isBotTriggered, isGroupAllowed } from "./gating";
+import {
+  buildAccessDeniedReply,
+  isBotTriggered,
+  isGroupAllowed,
+  isUserAllowed,
+  shouldSendDenial,
+} from "./gating";
 
 const findWorkspaceRoot = (startDir: string): string => {
   let curr = startDir;
@@ -374,17 +380,31 @@ export class KynosWhatsAppBot {
     const sender = msg.key.participant || jid;
     const senderName = msg.pushName || undefined;
 
+    const settings = getSettings();
+    const allowed = isGroup
+      ? isGroupAllowed(settings.allowed_groups, jid)
+      : isUserAllowed(settings.allowed_users, jid);
+
+    if (!allowed) {
+      if (shouldSendDenial(jid)) {
+        await this.sock.sendMessage(jid, {
+          text: buildAccessDeniedReply(
+            settings.owner_jid,
+            jid,
+            sender,
+            isGroup
+          ),
+        });
+      }
+      return;
+    }
+
     const text = extractMessageText(msg.message);
     const { mediaBuffer, mimetype } = await extractMedia(msg);
     const quoted = await extractQuoted(msg);
 
-    const settings = getSettings();
     const prefix = settings.bot_prefix || "/";
     const contextInfo = extractContextInfo(msg.message);
-
-    if (isGroup && !isGroupAllowed(settings.allowed_groups, jid)) {
-      return;
-    }
 
     const reply = async (replyText: string) => {
       if (this.sock) {

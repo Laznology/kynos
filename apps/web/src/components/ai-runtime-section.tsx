@@ -573,9 +573,9 @@ export const AiRuntimeSection = ({
               Group access
             </p>
             <p className="text-[10px] leading-relaxed text-zinc-600">
-              DMs always get auto-replies. In groups the bot answers only when
-              mentioned or its message is quoted; restrict which groups via the
-              Gateway panel.
+              Groups and DMs are both restricted: only JIDs listed in the
+              Gateway panel allowlist are served. In an allowed group the bot
+              answers only when mentioned or its message is quoted.
             </p>
           </div>
         </div>

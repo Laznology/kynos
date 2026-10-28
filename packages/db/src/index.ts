@@ -14,7 +14,11 @@ import type {
   SkillRecord,
   UserFact,
 } from "@kynos/shared";
-import { AVAILABLE_TOOLS, DEFAULT_SYSTEM_PROMPT } from "@kynos/shared";
+import {
+  AVAILABLE_TOOLS,
+  DEFAULT_SYSTEM_PROMPT,
+  normalizeUserJid,
+} from "@kynos/shared";
 import { destr } from "destr";
 import { asc, desc, eq, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/bun-sqlite";
@@ -190,7 +194,9 @@ export const initDatabase = (): void => {
     ai_system_prompt: DEFAULT_SYSTEM_PROMPT,
     ai_temperature: "0.7",
     allowed_groups: "[]",
+    allowed_users: "[]",
     bot_prefix: "/",
+    owner_jid: JSON.stringify("@ilazer"),
     sticker_pack_author: "Kynos Bot",
     sticker_pack_name: "Kynos",
     tools_enabled: JSON.stringify(TOOL_IDS),
@@ -234,7 +240,21 @@ const parseReasoningEffort = (val: string | undefined): ReasoningEffort => {
 };
 
 const parseAllowedGroups = (val: unknown): string[] =>
-  Array.isArray(val) ? val.map(String).filter((s) => s.endsWith("@g.us")) : [];
+  Array.isArray(val)
+    ? [...new Set(val.map(String))].filter((s) => s.endsWith("@g.us"))
+    : [];
+
+const parseAllowedUsers = (val: unknown): string[] =>
+  Array.isArray(val)
+    ? [...new Set(val.map(normalizeUserJid))].filter((s): s is string => !!s)
+    : [];
+
+const parseToolsEnabled = (val: unknown): string[] =>
+  Array.isArray(val)
+    ? [...new Set(val.map(String))].filter((s) =>
+        (TOOL_IDS as readonly string[]).includes(s)
+      )
+    : [...TOOL_IDS];
 
 const SCALAR_DEFAULTS = {
   ai_api_key: "",
@@ -246,6 +266,7 @@ const SCALAR_DEFAULTS = {
   ai_system_prompt: DEFAULT_SYSTEM_PROMPT,
   ai_temperature: 0.7,
   bot_prefix: "/",
+  owner_jid: "@ilazer",
   sticker_pack_author: "Kynos Bot",
   sticker_pack_name: "Kynos",
 };
@@ -254,13 +275,6 @@ const scalar = (
   map: Record<string, unknown>,
   key: keyof typeof SCALAR_DEFAULTS
 ) => (map[key] === undefined ? SCALAR_DEFAULTS[key] : map[key]);
-
-const parseToolsEnabled = (val: unknown): string[] =>
-  Array.isArray(val)
-    ? [...new Set(val.map(String))].filter((s) =>
-        (TOOL_IDS as readonly string[]).includes(s)
-      )
-    : [...TOOL_IDS];
 
 export const getSettings = (): AppSettings => {
   initDatabase();
@@ -282,7 +296,9 @@ export const getSettings = (): AppSettings => {
     ai_system_prompt: String(scalar(map, "ai_system_prompt")),
     ai_temperature: Number(scalar(map, "ai_temperature")),
     allowed_groups: parseAllowedGroups(map.allowed_groups),
+    allowed_users: parseAllowedUsers(map.allowed_users),
     bot_prefix: String(scalar(map, "bot_prefix")),
+    owner_jid: String(scalar(map, "owner_jid")),
     sticker_pack_author: String(scalar(map, "sticker_pack_author")),
     sticker_pack_name: String(scalar(map, "sticker_pack_name")),
     tools_enabled: parseToolsEnabled(map.tools_enabled),

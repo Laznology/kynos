@@ -28,6 +28,8 @@ export interface AppSettings {
   ai_system_prompt: string;
   bot_prefix: string;
   allowed_groups: string[];
+  allowed_users: string[];
+  owner_jid: string;
   sticker_pack_name: string;
   sticker_pack_author: string;
   tools_enabled: string[];
@@ -152,6 +154,19 @@ export const AI_MODEL_PRESETS = [
     provider: "ollama",
   },
 ] as const;
+
+const USER_SUFFIX = "@s.whatsapp.net";
+
+export const normalizeUserJid = (raw: string): string | null => {
+  const s = raw.trim();
+  if (s.endsWith("@g.us")) {
+    return null;
+  }
+  const digits = s.endsWith(USER_SUFFIX)
+    ? s.slice(0, -USER_SUFFIX.length)
+    : s.replaceAll(/\D/gu, "");
+  return /^\d{5,}$/u.test(digits) ? `${digits}${USER_SUFFIX}` : null;
+};
 
 export const DEFAULT_SYSTEM_PROMPT = `You are Kynos, an autonomous WhatsApp AI assistant. You solve user queries with structured multi-step reasoning and integrated tools. You analyze problems step-by-step inside <thought>...</thought> tags before producing your final answer. You adapt fluently to the user's language (Indonesian or English). You are concise, precise, and objective. When external or real-time data is required, you invoke your available tools. You have a self-evolution mechanism via skill_manage to create, update, or patch skills when discovering reusable workflows.`;
 
