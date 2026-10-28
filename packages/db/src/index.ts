@@ -6,7 +6,6 @@ import type {
   AIProvider,
   AppSettings,
   AuditLog,
-  AutoReplyMode,
   BotState,
   BotStatus,
   ChatMessage,
@@ -188,7 +187,7 @@ export const initDatabase = (): void => {
     ai_reasoning_effort: "medium",
     ai_system_prompt: `You are Kynos, an autonomous WhatsApp AI assistant. You solve user queries with structured multi-step reasoning and integrated tools. You analyze problems step-by-step inside <thought>...</thought> tags before producing your final answer. You adapt fluently to the user's language (Indonesian or English). You are concise, precise, and objective. When external or real-time data is required, you invoke your available tools. You have a self-evolution mechanism via skill_manage to create, update, or patch skills when discovering reusable workflows.`,
     ai_temperature: "0.7",
-    auto_reply_mode: "all",
+    allowed_groups: "[]",
     bot_prefix: "/",
     sticker_pack_author: "Kynos Bot",
     sticker_pack_name: "Kynos",
@@ -241,12 +240,8 @@ const parseReasoningEffort = (val: string | undefined): ReasoningEffort => {
   return "medium";
 };
 
-const parseAutoReply = (val: string | undefined): AutoReplyMode => {
-  if (val === "mention" || val === "dm_only") {
-    return val;
-  }
-  return "all";
-};
+const parseAllowedGroups = (val: unknown): string[] =>
+  Array.isArray(val) ? val.map(String).filter((s) => s.endsWith("@g.us")) : [];
 
 export const getSettings = (): AppSettings => {
   initDatabase();
@@ -266,7 +261,7 @@ export const getSettings = (): AppSettings => {
     ai_system_prompt:
       "You are Kynos, an autonomous WhatsApp AI assistant. You solve user queries with structured multi-step reasoning and integrated tools. You analyze problems step-by-step inside <thought>...</thought> tags before producing your final answer. You adapt fluently to the user's language (Indonesian or English). You are concise, precise, and objective. When external or real-time data is required, you invoke your available tools. You have a self-evolution mechanism via skill_manage to create, update, or patch skills when discovering reusable workflows.",
     ai_temperature: 0.7,
-    auto_reply_mode: "all",
+    allowed_groups: [],
     bot_prefix: "/",
     sticker_pack_author: "Kynos Bot",
     sticker_pack_name: "Kynos",
@@ -293,7 +288,7 @@ export const getSettings = (): AppSettings => {
     ),
     ai_system_prompt: String(merged.ai_system_prompt),
     ai_temperature: Number(merged.ai_temperature),
-    auto_reply_mode: parseAutoReply(String(merged.auto_reply_mode)),
+    allowed_groups: parseAllowedGroups(merged.allowed_groups),
     bot_prefix: String(merged.bot_prefix),
     sticker_pack_author: String(merged.sticker_pack_author),
     sticker_pack_name: String(merged.sticker_pack_name),

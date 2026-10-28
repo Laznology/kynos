@@ -37,6 +37,13 @@ describe("Database Repository (Drizzle ORM)", () => {
     const reloaded = getSettings();
     expect(reloaded.ai_temperature).toBe(0.9);
     expect(reloaded.sticker_pack_name).toBe("TestPack");
+
+    const withGroups = updateSettings({
+      allowed_groups: ["12036aaa@g.us", "not-a-group"],
+    });
+    expect(withGroups.allowed_groups).toEqual(["12036aaa@g.us"]);
+    updateSettings({ allowed_groups: [] });
+    expect(getSettings().allowed_groups).toEqual([]);
   });
 
   it("should update and fetch bot state", () => {

@@ -16,7 +16,6 @@ export interface BotState {
 
 export type AIProvider = "openrouter" | "openai" | "groq" | "ollama" | "custom";
 export type ReasoningEffort = "low" | "medium" | "high";
-export type AutoReplyMode = "all" | "mention" | "dm_only";
 
 export interface AppSettings {
   ai_provider: AIProvider;
@@ -28,7 +27,7 @@ export interface AppSettings {
   ai_reasoning_effort: ReasoningEffort;
   ai_system_prompt: string;
   bot_prefix: string;
-  auto_reply_mode: AutoReplyMode;
+  allowed_groups: string[];
   sticker_pack_name: string;
   sticker_pack_author: string;
   tools_enabled: string[];
