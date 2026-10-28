@@ -9,7 +9,6 @@ import {
   markReminderSent,
   updateBotState,
 } from "@kynos/db";
-import type { AutoReplyMode } from "@kynos/shared";
 import {
   makeWASocket,
   DisconnectReason,
@@ -21,7 +20,6 @@ import type {
   WASocket,
   ConnectionState,
   WAMessage,
-  proto,
 } from "@whiskeysockets/baileys";
 import pino from "pino";
 import qrcode from "qrcode-terminal";
@@ -30,6 +28,7 @@ import { renderSVG } from "uqr";
 import { runKynosAgent } from "./agent";
 import { dispatchCommand } from "./commands";
 import type { CommandContext } from "./commands";
+import { isBotTriggered, isGroupAllowed } from "./gating";
 
 const findWorkspaceRoot = (startDir: string): string => {
   let curr = startDir;
@@ -181,22 +180,6 @@ const sendMediaMessage = async (
     { caption, document: buffer, mimetype: "application/octet-stream" },
     { quoted }
   );
-};
-
-const shouldReplyInGroup = (
-  mode: AutoReplyMode,
-  contextInfo: proto.IContextInfo | null | undefined,
-  botUserId?: string
-): boolean => {
-  if (mode === "dm_only") {
-    return false;
-  }
-  if (mode === "mention") {
-    const myJid = `${botUserId?.split(":")[0]}@s.whatsapp.net`;
-    const mentioned = contextInfo?.mentionedJid || [];
-    return mentioned.includes(myJid);
-  }
-  return true;
 };
 
 const extractContextInfo = (m: WAMessage["message"]) => {
@@ -397,6 +380,11 @@ export class KynosWhatsAppBot {
 
     const settings = getSettings();
     const prefix = settings.bot_prefix || "/";
+    const contextInfo = extractContextInfo(msg.message);
+
+    if (isGroup && !isGroupAllowed(settings.allowed_groups, jid)) {
+      return;
+    }
 
     const reply = async (replyText: string) => {
       if (this.sock) {
@@ -429,15 +417,7 @@ export class KynosWhatsAppBot {
       return;
     }
 
-    const contextInfo = extractContextInfo(msg.message);
-    if (
-      isGroup &&
-      !shouldReplyInGroup(
-        settings.auto_reply_mode,
-        contextInfo,
-        this.sock.user?.id
-      )
-    ) {
+    if (isGroup && !isBotTriggered(contextInfo, this.sock.user?.id)) {
       return;
     }
 

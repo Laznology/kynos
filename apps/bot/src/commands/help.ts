@@ -82,7 +82,7 @@ export const statusCommand: CommandHandler = {
 - AI Provider: ${settings.ai_provider}
 - AI Model: ${settings.ai_model}
 - Reasoning Effort: ${settings.ai_reasoning_effort}
-- Auto-Reply: ${settings.auto_reply_mode}
+- Group Access: ${settings.allowed_groups.length === 0 ? "all groups" : settings.allowed_groups.join(", ")}
 - Tools Aktif: ${settings.tools_enabled.join(", ")}
 - Sticker Pack: ${settings.sticker_pack_name} (oleh ${settings.sticker_pack_author})`;
 
