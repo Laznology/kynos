@@ -475,7 +475,7 @@ const ToolsSection = ({
   onToggleTool,
 }: {
   enabledTools: string[];
-  onToggleTool: (toolName: string) => void;
+  onToggleTool: (toolId: string) => void;
 }) => (
   <div className="rounded-md border border-white/[0.07] bg-[#0a0a0d]">
     <div className="flex items-center gap-2 border-b border-white/[0.07] px-4 py-2.5">
@@ -489,7 +489,7 @@ const ToolsSection = ({
     </div>
     <div className="grid grid-cols-1 sm:grid-cols-2">
       {AVAILABLE_TOOLS.map((tool, i) => {
-        const isEnabled = enabledTools.includes(tool.name);
+        const isEnabled = enabledTools.includes(tool.id);
         return (
           <div
             className={`flex items-start justify-between gap-3 border-white/[0.04] p-3.5 ${
@@ -513,7 +513,7 @@ const ToolsSection = ({
             </div>
             <Switch
               checked={isEnabled}
-              onCheckedChange={() => onToggleTool(tool.name)}
+              onCheckedChange={() => onToggleTool(tool.id)}
             />
           </div>
         );
@@ -638,15 +638,15 @@ const DashboardPage = () => {
     loadModels(baseUrl, settings.ai_api_key);
   };
 
-  const handleToggleTool = (toolName: string) => {
+  const handleToggleTool = (toolId: string) => {
     setSettings((prev) => {
       const current = prev.tools_enabled || [];
-      const exists = current.includes(toolName);
+      const exists = current.includes(toolId);
       return {
         ...prev,
         tools_enabled: exists
-          ? current.filter((t) => t !== toolName)
-          : [...current, toolName],
+          ? current.filter((t) => t !== toolId)
+          : [...current, toolId],
       };
     });
   };
@@ -791,12 +791,12 @@ const DashboardPage = () => {
     },
     ...AVAILABLE_TOOLS.map((t) => ({
       group: "Tools",
-      hint: settings.tools_enabled?.includes(t.name) ? "on" : "off",
+      hint: settings.tools_enabled?.includes(t.id) ? "on" : "off",
       icon: <Wrench />,
-      id: `tool-${t.name}`,
+      id: `tool-${t.id}`,
       keywords: `${t.name} ${t.description}`,
       label: `Toggle tool ${t.name}`,
-      run: () => handleToggleTool(t.name),
+      run: () => handleToggleTool(t.id),
     })),
   ];
 

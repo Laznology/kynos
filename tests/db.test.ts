@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
 
+import { AVAILABLE_TOOLS } from "@kynos/shared";
+
 import {
   initDatabase,
   getSettings,
@@ -44,6 +46,27 @@ describe("Database Repository (Drizzle ORM)", () => {
     expect(withGroups.allowed_groups).toEqual(["12036aaa@g.us"]);
     updateSettings({ allowed_groups: [] });
     expect(getSettings().allowed_groups).toEqual([]);
+  });
+
+  it("keeps tools_enabled as unique registry ids and honors an empty list", () => {
+    const dirty = updateSettings({
+      tools_enabled: [
+        "web_search",
+        "web_search",
+        "Web Search",
+        "Calculator",
+        "calculator",
+        "not_a_tool",
+      ],
+    });
+    expect(dirty.tools_enabled).toEqual(["web_search", "calculator"]);
+
+    const cleared = updateSettings({ tools_enabled: [] });
+    expect(cleared.tools_enabled).toEqual([]);
+
+    const allIds = AVAILABLE_TOOLS.map((t) => t.id);
+    updateSettings({ tools_enabled: allIds });
+    expect(getSettings().tools_enabled).toEqual(allIds);
   });
 
   it("should update and fetch bot state", () => {

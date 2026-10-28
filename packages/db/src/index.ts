@@ -14,7 +14,7 @@ import type {
   SkillRecord,
   UserFact,
 } from "@kynos/shared";
-import { defu } from "defu";
+import { AVAILABLE_TOOLS, DEFAULT_SYSTEM_PROMPT } from "@kynos/shared";
 import { destr } from "destr";
 import { asc, desc, eq, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/bun-sqlite";
@@ -75,6 +75,8 @@ sqlite.exec("PRAGMA foreign_keys = ON;");
 export const db = drizzle(sqlite, { schema });
 
 let initialized = false;
+
+const TOOL_IDS = AVAILABLE_TOOLS.map((t) => t.id);
 
 export const initDatabase = (): void => {
   if (initialized) {
@@ -185,22 +187,13 @@ export const initDatabase = (): void => {
     ai_model: "nousresearch/hermes-3-llama-3.1-70b",
     ai_provider: "openrouter",
     ai_reasoning_effort: "medium",
-    ai_system_prompt: `You are Kynos, an autonomous WhatsApp AI assistant. You solve user queries with structured multi-step reasoning and integrated tools. You analyze problems step-by-step inside <thought>...</thought> tags before producing your final answer. You adapt fluently to the user's language (Indonesian or English). You are concise, precise, and objective. When external or real-time data is required, you invoke your available tools. You have a self-evolution mechanism via skill_manage to create, update, or patch skills when discovering reusable workflows.`,
+    ai_system_prompt: DEFAULT_SYSTEM_PROMPT,
     ai_temperature: "0.7",
     allowed_groups: "[]",
     bot_prefix: "/",
     sticker_pack_author: "Kynos Bot",
     sticker_pack_name: "Kynos",
-    tools_enabled: JSON.stringify([
-      "web_search",
-      "calculator",
-      "datetime",
-      "weather",
-      "summarize",
-      "reminder",
-      "memory",
-      "skill_manage",
-    ]),
+    tools_enabled: JSON.stringify(TOOL_IDS),
   };
 
   const now = Date.now();
@@ -243,6 +236,32 @@ const parseReasoningEffort = (val: string | undefined): ReasoningEffort => {
 const parseAllowedGroups = (val: unknown): string[] =>
   Array.isArray(val) ? val.map(String).filter((s) => s.endsWith("@g.us")) : [];
 
+const SCALAR_DEFAULTS = {
+  ai_api_key: "",
+  ai_base_url: "https://openrouter.ai/api/v1",
+  ai_max_tokens: 2048,
+  ai_model: "nousresearch/hermes-3-llama-3.1-70b",
+  ai_provider: "openrouter",
+  ai_reasoning_effort: "medium",
+  ai_system_prompt: DEFAULT_SYSTEM_PROMPT,
+  ai_temperature: 0.7,
+  bot_prefix: "/",
+  sticker_pack_author: "Kynos Bot",
+  sticker_pack_name: "Kynos",
+};
+
+const scalar = (
+  map: Record<string, unknown>,
+  key: keyof typeof SCALAR_DEFAULTS
+) => (map[key] === undefined ? SCALAR_DEFAULTS[key] : map[key]);
+
+const parseToolsEnabled = (val: unknown): string[] =>
+  Array.isArray(val)
+    ? [...new Set(val.map(String))].filter((s) =>
+        (TOOL_IDS as readonly string[]).includes(s)
+      )
+    : [...TOOL_IDS];
+
 export const getSettings = (): AppSettings => {
   initDatabase();
   const rows = db.select().from(schema.settingsTable).all();
@@ -251,50 +270,22 @@ export const getSettings = (): AppSettings => {
     map[r.key] = destr(r.value);
   }
 
-  const merged = defu(map, {
-    ai_api_key: "",
-    ai_base_url: "https://openrouter.ai/api/v1",
-    ai_max_tokens: 2048,
-    ai_model: "nousresearch/hermes-3-llama-3.1-70b",
-    ai_provider: "openrouter",
-    ai_reasoning_effort: "medium",
-    ai_system_prompt:
-      "You are Kynos, an autonomous WhatsApp AI assistant. You solve user queries with structured multi-step reasoning and integrated tools. You analyze problems step-by-step inside <thought>...</thought> tags before producing your final answer. You adapt fluently to the user's language (Indonesian or English). You are concise, precise, and objective. When external or real-time data is required, you invoke your available tools. You have a self-evolution mechanism via skill_manage to create, update, or patch skills when discovering reusable workflows.",
-    ai_temperature: 0.7,
-    allowed_groups: [],
-    bot_prefix: "/",
-    sticker_pack_author: "Kynos Bot",
-    sticker_pack_name: "Kynos",
-    tools_enabled: [
-      "web_search",
-      "calculator",
-      "datetime",
-      "weather",
-      "summarize",
-      "reminder",
-      "memory",
-      "skill_manage",
-    ],
-  });
-
   return {
-    ai_api_key: String(merged.ai_api_key),
-    ai_base_url: String(merged.ai_base_url),
-    ai_max_tokens: Number(merged.ai_max_tokens),
-    ai_model: String(merged.ai_model),
-    ai_provider: parseProvider(String(merged.ai_provider)),
+    ai_api_key: String(scalar(map, "ai_api_key")),
+    ai_base_url: String(scalar(map, "ai_base_url")),
+    ai_max_tokens: Number(scalar(map, "ai_max_tokens")),
+    ai_model: String(scalar(map, "ai_model")),
+    ai_provider: parseProvider(String(scalar(map, "ai_provider"))),
     ai_reasoning_effort: parseReasoningEffort(
-      String(merged.ai_reasoning_effort)
+      String(scalar(map, "ai_reasoning_effort"))
     ),
-    ai_system_prompt: String(merged.ai_system_prompt),
-    ai_temperature: Number(merged.ai_temperature),
-    allowed_groups: parseAllowedGroups(merged.allowed_groups),
-    bot_prefix: String(merged.bot_prefix),
-    sticker_pack_author: String(merged.sticker_pack_author),
-    sticker_pack_name: String(merged.sticker_pack_name),
-    tools_enabled: Array.isArray(merged.tools_enabled)
-      ? merged.tools_enabled.map(String)
-      : [],
+    ai_system_prompt: String(scalar(map, "ai_system_prompt")),
+    ai_temperature: Number(scalar(map, "ai_temperature")),
+    allowed_groups: parseAllowedGroups(map.allowed_groups),
+    bot_prefix: String(scalar(map, "bot_prefix")),
+    sticker_pack_author: String(scalar(map, "sticker_pack_author")),
+    sticker_pack_name: String(scalar(map, "sticker_pack_name")),
+    tools_enabled: parseToolsEnabled(map.tools_enabled),
   };
 };
 

@@ -103,4 +103,9 @@ describe("Agent Core & Tools (Vercel AI SDK)", () => {
     expect(tools.datetime).toBeDefined();
     expect(tools.web_search).toBeUndefined();
   });
+
+  it("exposes no tools when the allowlist is empty", () => {
+    const tools = getAgentTools({ jid: "test@s.whatsapp.net" }, []);
+    expect(Object.keys(tools)).toEqual([]);
+  });
 });

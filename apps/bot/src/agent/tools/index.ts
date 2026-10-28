@@ -12,7 +12,7 @@ import { webSearchTool } from "./web-search";
 
 export const getAgentTools = (
   context: AgentContext,
-  enabledToolNames?: string[]
+  enabledToolIds?: string[]
 ): ToolSet => {
   const all: ToolSet = {
     calculator: calculatorTool,
@@ -25,11 +25,11 @@ export const getAgentTools = (
     web_search: webSearchTool,
   };
 
-  if (!enabledToolNames || enabledToolNames.length === 0) {
+  if (!enabledToolIds) {
     return all;
   }
 
-  const enabledSet = new Set(enabledToolNames);
+  const enabledSet = new Set(enabledToolIds);
   const filtered: ToolSet = {};
 
   for (const [key, value] of Object.entries(all)) {

@@ -14,7 +14,6 @@
     "@kynos/shared": "workspace:*",
     "@whiskeysockets/baileys": "^7.0.0-rc14",
     "ai": "^7.0.154",
-    "defu": "^6.1.7",
     "destr": "^2.0.5",
     "openai": "^7.45.0",
     "pino": "^10.4.0",
