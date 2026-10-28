@@ -1,0 +1,32 @@
+{
+  "name": "kynos",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "test": "bun test",
+    "dev": "bun --filter '@kynos/web' dev",
+    "dev:all": "bun --filter '*' dev",
+    "dev:web": "bun --filter '@kynos/web' dev",
+    "dev:bot": "bun --filter '@kynos/bot' dev",
+    "build": "bun --filter '@kynos/web' build",
+    "start:bot": "bun --filter '@kynos/bot' start",
+    "check": "ultracite check",
+    "fix": "ultracite fix"
+  },
+  "dependencies": {
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.4",
+    "defu": "^6.1.7",
+    "destr": "^2.0.5",
+    "oxfmt": "^0.74.0",
+    "oxlint": "^1.89.0",
+    "sharp": "^0.35.5",
+    "ultracite": "8.1.0"
+  }
+}

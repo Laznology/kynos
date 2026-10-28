@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "types": ["bun"],
+    "paths": {
+      "@kynos/shared": ["./packages/shared/src/index.ts"],
+      "@kynos/db": ["./packages/db/src/index.ts"]
+    },
+    "strict": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true
+  }
+}
