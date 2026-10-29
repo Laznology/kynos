@@ -14,12 +14,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { getSessionFromRequest } from "../lib/auth";
 
 export const Route = createFileRoute("/api/dashboard")({
- server: {
- handlers: {
- GET: ({ request }) => {
- if (!getSessionFromRequest(request)) {
- return Response.json({ error: "Unauthorized" }, { status: 401 });
- }
+  server: {
+    handlers: {
+      GET: ({ request }) => {
+        if (!getSessionFromRequest(request)) {
+          return Response.json({ error: "Unauthorized" }, { status: 401 });
+        }
         const payload = {
           logs: getAuditLogs(20),
           settings: getSettings(),
@@ -29,9 +29,9 @@ export const Route = createFileRoute("/api/dashboard")({
         return Response.json(payload);
       },
       POST: async ({ request }) => {
- if (!getSessionFromRequest(request)) {
- return Response.json({ error: "Unauthorized" }, { status: 401 });
- }
+        if (!getSessionFromRequest(request)) {
+          return Response.json({ error: "Unauthorized" }, { status: 401 });
+        }
         try {
           const body = (await request.json()) as {
             action: string;
@@ -76,7 +76,19 @@ export const Route = createFileRoute("/api/dashboard")({
             return Response.json({ ok: true });
           }
           if (body.action === "restart_bot") {
-            return Response.json({ message: "Restart triggered", ok: true });
+            const restart = await fetch(
+              "http://localhost:3001/api/bot/restart",
+              {
+                method: "POST",
+              }
+            );
+            if (!restart.ok) {
+              return Response.json(
+                { error: "Bot restart request failed" },
+                { status: 502 }
+              );
+            }
+            return Response.json({ message: "Bot restarting...", ok: true });
           }
           return Response.json({ error: "Unknown action" }, { status: 400 });
         } catch (error) {

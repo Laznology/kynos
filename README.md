@@ -1,3 +1,7 @@
+# Dashboard authentication
+
+Before starting the web app, set `ADMIN_PASSWORD` and a random `SESSION_SECRET`. Login is unavailable without both values; no default password is configured. Keep both values private.
+
 Welcome to your new TanStack Start app!
 
 # Getting Started

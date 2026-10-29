@@ -10,45 +10,48 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
-function LoginPage() {
+const LoginPage = () => {
+  const router = useRouter();
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!password.trim()) {
-      setError("Masukkan password admin");
+    const formData = new FormData(e.currentTarget);
+    const pwd = (formData.get("password") as string)?.trim() || password.trim();
+    if (!pwd) {
+      setError("Enter admin password");
       return;
     }
     setError(null);
     setLoading(true);
     try {
-      const res = await loginFn(password);
+      const res = await loginFn(pwd);
       if (res.ok) {
+        await router.invalidate();
         window.location.href = "/";
-      } else {
-        setError(res.error || "Password salah");
+        return;
       }
+      setError(res.error || "Incorrect password");
     } catch {
-      setError("Gagal menghubungi server");
-    } finally {
-      setLoading(false);
+      setError("Failed to connect to server");
     }
+    setLoading(false);
   };
 
   return (
     <div className="flex h-full w-full items-center justify-center p-4">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl">
+      <div className="border-border bg-card w-full max-w-sm rounded-2xl border p-6 shadow-xl">
         <div className="mb-6 flex flex-col items-center text-center">
-          <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+          <div className="bg-primary text-primary-foreground mb-3 flex h-11 w-11 items-center justify-center rounded-xl shadow-sm">
             <LockKey className="h-5 w-5" weight="fill" />
           </div>
-          <h1 className="text-base font-semibold tracking-tight text-foreground">
+          <h1 className="text-foreground text-base font-semibold tracking-tight">
             Kynos Console
           </h1>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Akses dibatasi. Masukkan password admin.
+          <p className="text-muted-foreground mt-1 text-xs">
+            Restricted access. Enter admin password.
           </p>
         </div>
 
@@ -56,6 +59,8 @@ function LoginPage() {
           <div>
             <Input
               autoFocus
+              id="password"
+              name="password"
               type="password"
               placeholder="Admin Password"
               value={password}
@@ -65,7 +70,7 @@ function LoginPage() {
           </div>
 
           {error && (
-            <div className="rounded-xl border border-destructive/30 bg-destructive/15 px-3 py-2 font-mono text-xs text-destructive">
+            <div className="border-destructive/30 bg-destructive/15 text-destructive rounded-xl border px-3 py-2 font-mono text-xs">
               {error}
             </div>
           )}
@@ -76,10 +81,10 @@ function LoginPage() {
             className="w-full gap-2 text-xs"
           >
             <SignIn className="h-4 w-4" />
-            {loading ? "Memverifikasi..." : "Masuk"}
+            {loading ? "Verifying..." : "Sign In"}
           </Button>
         </form>
       </div>
     </div>
   );
-}
+};

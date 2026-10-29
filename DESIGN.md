@@ -5,6 +5,7 @@ Meta hardware commerce (Quest, Ray-Ban Meta AI) & interface canvas design system
 ## 1. Color Palette
 
 ### Brand & Accent
+
 - **Cobalt Primary**: `#0064e0` (Buy-now / Commerce / Key CTA)
 - **Deep Cobalt**: `#0457cb` (Pressed / Hover state)
 - **Soft Cobalt 15%**: `rgba(0, 100, 224, 0.15)`
@@ -13,6 +14,7 @@ Meta hardware commerce (Quest, Ray-Ban Meta AI) & interface canvas design system
 - **Oculus Purple**: `#a121ce`
 
 ### Surfaces & Dark Canvas
+
 - **Page Background (Canvas Dark)**: `#0a0d10` (Meta dark mode deep charcoal ink, NOT pure pitch black)
 - **Surface / Card Background**: `#14181d` (Elevated dark card surface)
 - **Surface Raised / Header / Nav**: `#1a1f26` (Higher contrast raised panel)
@@ -21,12 +23,14 @@ Meta hardware commerce (Quest, Ray-Ban Meta AI) & interface canvas design system
 - **Hairline Strong / Input Border**: `#303945`
 
 ### Surfaces (Light Reference)
+
 - **Canvas White**: `#ffffff`
 - **Soft Cloud**: `#f1f4f7`
 - **Hairline Gray**: `#ced0d4`
 - **Hairline Soft**: `#dee3e9`
 
 ### Typography & Ink Hierarchy
+
 - **Deep Ink (Headlines / Display)**: `#f7f9fa` (Dark mode primary text, stark and crisp)
 - **Ink (Body Text)**: `#e4e7eb` (Dark mode readable body copy)
 - **Charcoal (Tertiary Text)**: `#9aa8b6` (Muted labels, secondary descriptions)
@@ -34,6 +38,7 @@ Meta hardware commerce (Quest, Ray-Ban Meta AI) & interface canvas design system
 - **Stone (Disabled)**: `#515b67` (Disabled elements)
 
 ### Semantic Status
+
 - **Success**: `#31a24c`
 - **Attention / Warning**: `#f2a918` / `#f7b928`
 - **Critical / Destructive**: `#e41e3f` / `#f0284a`

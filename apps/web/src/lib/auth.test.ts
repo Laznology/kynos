@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+
 import {
   createClearSessionCookie,
   createSessionCookie,
@@ -7,8 +8,10 @@ import {
   verifySessionToken,
 } from "./auth";
 
-test("auth: default admin password", () => {
-  expect(getAdminPassword()).toBeDefined();
+test("auth: getAdminPassword returns configured password or default admin", () => {
+  const pwd = getAdminPassword();
+  expect(typeof pwd).toBe("string");
+  expect(pwd.length).toBeGreaterThan(0);
 });
 
 test("auth: create and verify valid session cookie", () => {
@@ -16,8 +19,12 @@ test("auth: create and verify valid session cookie", () => {
   expect(cookieStr).toContain("kynos_session=");
   expect(cookieStr).toContain("HttpOnly");
 
-  const token = cookieStr.match(/kynos_session=([^;]+)/)?.[1];
+  const match = cookieStr.match(/kynos_session=(?<token>[^;]+)/u);
+  const token = match?.groups?.token;
   expect(token).toBeDefined();
+  if (!token) {
+    throw new Error("Missing token");
+  }
   expect(verifySessionToken(token)).toBe(true);
 });
 
@@ -27,15 +34,24 @@ test("auth: reject tampered or invalid token", () => {
   expect(verifySessionToken("invalid.token.here")).toBe(false);
 
   const cookieStr = createSessionCookie();
-  const token = cookieStr.match(/kynos_session=([^;]+)/)?.[1]!;
-  const tampered = token.slice(0, -2) + "xx";
+  const match = cookieStr.match(/kynos_session=(?<token>[^;]+)/u);
+  const token = match?.groups?.token;
+  expect(token).toBeDefined();
+  if (!token) {
+    throw new Error("Missing token");
+  }
+  const tampered = `${token.slice(0, -2)}xx`;
   expect(verifySessionToken(tampered)).toBe(false);
 });
 
 test("auth: extract session from request headers", () => {
   const cookieStr = createSessionCookie();
-  const token = cookieStr.match(/kynos_session=([^;]+)/)?.[1]!;
-
+  const match = cookieStr.match(/kynos_session=(?<token>[^;]+)/u);
+  const token = match?.groups?.token;
+  expect(token).toBeDefined();
+  if (!token) {
+    throw new Error("Missing token");
+  }
   const validReq = new Request("http://localhost:3000/api/dashboard", {
     headers: {
       cookie: `other=foo; kynos_session=${token}; bar=baz`,

@@ -45,7 +45,7 @@ export const Route = createFileRoute("/api/auth")({
               );
             }
             return Response.json(
-              { error: "Password salah", ok: false },
+              { error: "Incorrect password", ok: false },
               { status: 401 }
             );
           }

@@ -1,23 +1,20 @@
+import { getAuditLogs, getBotState, getSettings, getSkills } from "@kynos/db";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
-import {
-  getAuditLogs,
-  getBotState,
-  getSettings,
-  getSkills,
-} from "@kynos/db";
 
 import { verifySessionToken } from "./auth";
 import type { DashboardData } from "./server-api";
 
 export const getDashboardDataFn = createServerFn({ method: "GET" }).handler(
-  async (): Promise<DashboardData> => {
+  (): Promise<DashboardData> => {
     const cookie = getRequestHeader("cookie");
     let token: string | null = null;
     if (cookie) {
-      for (const part of cookie.split(/;\s*/)) {
+      for (const part of cookie.split(/;\s*/u)) {
         const eq = part.indexOf("=");
-        if (eq === -1) continue;
+        if (eq === -1) {
+          continue;
+        }
         if (part.slice(0, eq) === "kynos_session") {
           token = part.slice(eq + 1);
           break;
@@ -29,11 +26,11 @@ export const getDashboardDataFn = createServerFn({ method: "GET" }).handler(
       throw new Error("UNAUTHORIZED");
     }
 
-    return {
+    return Promise.resolve({
       logs: getAuditLogs(20),
       settings: getSettings(),
       skills: getSkills(),
       state: getBotState(),
-    };
+    });
   }
 );

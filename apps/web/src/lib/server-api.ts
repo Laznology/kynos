@@ -55,8 +55,11 @@ export const fetchAvailableModels = async (
   if (!res.ok) {
     throw new Error(`Failed to fetch models: ${res.statusText}`);
   }
-  const json = (await res.json()) as { data: ModelOption[]; ok: boolean };
-  return json.data || [];
+  const json = (await res.json()) as {
+    data?: ModelOption[];
+    models?: ModelOption[];
+  };
+  return json.models ?? json.data ?? [];
 };
 
 export const saveSettingsFn = async ({
@@ -124,7 +127,15 @@ export const triggerBotRestartFn = async (): Promise<{
     headers: { "Content-Type": "application/json" },
     method: "POST",
   });
-  return (await res.json()) as { message: string; ok: boolean };
+  const result = (await res.json()) as {
+    error?: string;
+    message?: string;
+    ok?: boolean;
+  };
+  if (!res.ok || !result.ok) {
+    throw new Error(result.error || "Bot restart failed");
+  }
+  return { message: result.message || "Bot restarting...", ok: true };
 };
 
 export const loginFn = async (

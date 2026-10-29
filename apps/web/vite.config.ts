@@ -5,5 +5,6 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
+  envDir: "../../",
   plugins: [nitro(), tailwindcss(), tanstackStart(), viteReact()],
 });
