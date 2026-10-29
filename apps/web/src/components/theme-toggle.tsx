@@ -1,3 +1,4 @@
+import { Monitor, Moon, Sun } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 
 type ThemeMode = "light" | "dark" | "auto";
@@ -70,29 +71,19 @@ export const ThemeToggle = () => {
     window.localStorage.setItem("theme", nextMode);
   };
 
-  const label =
-    mode === "auto"
-      ? "Theme mode: auto (system). Click to switch to light mode."
-      : `Theme mode: ${mode}. Click to switch mode.`;
-
-  let modeText = "Light";
-  if (mode === "auto") {
-    modeText = "Auto";
-  } else if (mode === "dark") {
-    modeText = "Dark";
-  }
-
+  const label = `Theme: ${mode}. Click to switch mode.`;
   return (
     <button
       type="button"
       onClick={toggleMode}
       aria-label={label}
       title={label}
-      className="rounded-full border border-[var(--chip-line)] bg-[var(--chip-bg)] px-3 py-1.5 text-sm font-semibold text-[var(--sea-ink)] shadow-[0_8px_22px_rgba(30,90,72,0.08)] transition hover:-translate-y-0.5"
+      className="border-border bg-background/60 text-muted-foreground hover:text-foreground focus-visible:ring-ring flex min-h-9 min-w-9 items-center justify-center rounded-full border transition-colors focus-visible:ring-2 focus-visible:outline-none"
     >
-      {modeText}
+      {mode === "auto" && <Monitor aria-hidden="true" className="h-4 w-4" />}
+      {mode === "dark" && <Moon aria-hidden="true" className="h-4 w-4" />}
+      {mode === "light" && <Sun aria-hidden="true" className="h-4 w-4" />}
     </button>
   );
 };
-
 export default ThemeToggle;

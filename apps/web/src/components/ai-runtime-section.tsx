@@ -90,7 +90,7 @@ const ModelBrowser = ({
     for (const m of availableModels) {
       set.add(vendorOf(m));
     }
-    return Array.from(set).sort();
+    return [...set].toSorted();
   }, [availableModels]);
 
   const filtered = useMemo(() => {
@@ -156,13 +156,13 @@ const ModelBrowser = ({
     <div className="relative" ref={containerRef}>
       <div className="mb-2 flex items-center justify-between">
         <label
-          className="text-xs font-semibold text-foreground"
+          className="text-foreground text-xs font-semibold"
           htmlFor="model_browser_trigger"
         >
           Model Selection
         </label>
         <button
-          className="font-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground font-mono text-[11px] transition-colors"
           onClick={() => setIsOpen((v) => !v)}
           type="button"
         >
@@ -173,41 +173,41 @@ const ModelBrowser = ({
       <button
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-input bg-card px-3.5 py-2.5 text-left transition-colors hover:border-primary/50"
+        className="border-input bg-card hover:border-primary/50 flex w-full cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-colors"
         id="model_browser_trigger"
         onClick={() => setIsOpen((v) => !v)}
         type="button"
       >
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">
+        <span className="bg-secondary text-primary flex h-7 w-7 shrink-0 items-center justify-center rounded-lg">
           <Brain className="h-4 w-4" />
         </span>
-        <span className="min-w-0 flex-1 truncate font-mono text-xs text-foreground font-medium">
+        <span className="text-foreground min-w-0 flex-1 truncate font-mono text-xs font-medium">
           {model || "no model selected"}
         </span>
         {availableModels.length > 0 && (
-          <span className="shrink-0 rounded-full border border-border bg-secondary/80 px-2.5 py-0.5 font-mono text-[10px] text-muted-foreground tabular-nums">
+          <span className="border-border bg-secondary/80 text-muted-foreground shrink-0 rounded-full border px-2.5 py-0.5 font-mono text-[10px] tabular-nums">
             {availableModels.length} models
           </span>
         )}
         <CaretDown
-          className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
+          className={`text-muted-foreground h-4 w-4 shrink-0 transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
         />
       </button>
 
       {error && !isOpen && (
-        <p className="mt-1.5 font-mono text-xs text-destructive">{error}</p>
+        <p className="text-destructive mt-1.5 font-mono text-xs">{error}</p>
       )}
 
       {isOpen && (
-        <div className="animate-fade-in absolute top-full right-0 left-0 z-40 mt-2 overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
-          <div className="flex items-center gap-2.5 border-b border-border px-4 py-2.5">
-            <MagnifyingGlass className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <div className="animate-fade-in border-border bg-card absolute top-full right-0 left-0 z-40 mt-2 overflow-hidden rounded-2xl border shadow-2xl">
+          <div className="border-border flex items-center gap-2.5 border-b px-4 py-2.5">
+            <MagnifyingGlass className="text-muted-foreground h-4 w-4 shrink-0" />
             <input
               aria-label="Search models"
               autoFocus
-              className="h-8 w-full bg-transparent text-xs text-foreground outline-none placeholder:text-muted-foreground"
+              className="text-foreground placeholder:text-muted-foreground h-8 w-full bg-transparent text-xs outline-none"
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Escape") {
@@ -231,7 +231,7 @@ const ModelBrowser = ({
             />
           </div>
 
-          <div className="flex gap-1.5 overflow-x-auto border-b border-border px-3 py-2">
+          <div className="border-border flex gap-1.5 overflow-x-auto border-b px-3 py-2">
             <button
               className={`shrink-0 rounded-full px-3 py-1 font-mono text-[10px] transition-colors ${
                 vendor === null
@@ -262,25 +262,25 @@ const ModelBrowser = ({
 
           <div className="max-h-72 overflow-y-auto p-1.5" ref={listRef}>
             {isFetching && (
-              <div className="flex items-center gap-2.5 px-4 py-8 font-mono text-xs text-muted-foreground">
-                <ArrowsClockwise className="h-4 w-4 animate-spin text-primary" />
+              <div className="text-muted-foreground flex items-center gap-2.5 px-4 py-8 font-mono text-xs">
+                <ArrowsClockwise className="text-primary h-4 w-4 animate-spin" />
                 syncing model catalog...
               </div>
             )}
             {error && (
-              <p className="px-4 py-6 font-mono text-xs text-destructive">
+              <p className="text-destructive px-4 py-6 font-mono text-xs">
                 {error}
               </p>
             )}
             {!isFetching && !error && ordered.length === 0 && (
-              <p className="px-4 py-8 text-center text-xs text-muted-foreground">
+              <p className="text-muted-foreground px-4 py-8 text-center text-xs">
                 No models match your query.
               </p>
             )}
 
-            {Array.from(grouped.entries()).map(([v, list]) => (
+            {[...grouped.entries()].map(([v, list]) => (
               <div key={v}>
-                <p className="sticky top-0 z-10 flex items-center gap-2 bg-card px-3 pt-2 pb-1 font-mono text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                <p className="bg-card text-muted-foreground sticky top-0 z-10 flex items-center gap-2 px-3 pt-2 pb-1 font-mono text-[10px] font-semibold tracking-wider uppercase">
                   {vendorGlyph(v)}
                   {v}
                   <span className="tabular-nums">· {list.length}</span>
@@ -289,15 +289,18 @@ const ModelBrowser = ({
                   {list.map((m) => {
                     const isSelected = m.id === model;
                     const isActive = active?.id === m.id;
+                    const getItemStyle = () => {
+                      if (isSelected) {
+                        return "bg-primary/10 text-primary font-medium";
+                      }
+                      if (isActive) {
+                        return "bg-secondary text-foreground";
+                      }
+                      return "text-foreground hover:bg-secondary/60";
+                    };
                     return (
                       <button
-                        className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-colors ${
-                          isSelected
-                            ? "bg-primary/10 text-primary font-medium"
-                            : isActive
-                              ? "bg-secondary text-foreground"
-                              : "text-foreground hover:bg-secondary/60"
-                        }`}
+                        className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-colors ${getItemStyle()}`}
                         key={m.id}
                         onClick={() => pick(m)}
                         type="button"
@@ -306,12 +309,12 @@ const ModelBrowser = ({
                           {m.id}
                         </span>
                         {m.context_length ? (
-                          <span className="shrink-0 rounded-full border border-border bg-secondary/80 px-2 py-0.5 font-mono text-[10px] text-muted-foreground tabular-nums">
+                          <span className="border-border bg-secondary/80 text-muted-foreground shrink-0 rounded-full border px-2 py-0.5 font-mono text-[10px] tabular-nums">
                             {Math.round(m.context_length / 1000)}k ctx
                           </span>
                         ) : null}
                         {isSelected && (
-                          <Check className="h-4 w-4 shrink-0 text-primary" />
+                          <Check className="text-primary h-4 w-4 shrink-0" />
                         )}
                       </button>
                     );
@@ -321,15 +324,15 @@ const ModelBrowser = ({
             ))}
           </div>
 
-          <div className="flex items-center justify-between border-t border-border px-4 py-2">
-            <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
+          <div className="border-border flex items-center justify-between border-t px-4 py-2">
+            <span className="text-muted-foreground font-mono text-[10px] tabular-nums">
               {ordered.length} / {availableModels.length} models
             </span>
             <span className="flex items-center gap-2">
               <span className="kbd">↵</span>
-              <span className="text-[10px] text-muted-foreground">select</span>
+              <span className="text-muted-foreground text-[10px]">select</span>
               <span className="kbd">esc</span>
-              <span className="text-[10px] text-muted-foreground">close</span>
+              <span className="text-muted-foreground text-[10px]">close</span>
             </span>
           </div>
         </div>
@@ -353,7 +356,7 @@ const Segmented = <T extends string>({
         className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
           o.value === value
             ? "bg-primary text-primary-foreground shadow-sm"
-            : "border border-border bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
+            : "border-border bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground border"
         }`}
         key={o.value}
         onClick={() => onChange(o.value)}
@@ -391,14 +394,14 @@ export const AiRuntimeSection = ({
 }) => (
   <div className="space-y-5">
     <Card>
-      <CardHeader className="flex-row items-center justify-between border-b border-border px-5 py-4">
+      <CardHeader className="border-border flex-row items-center justify-between border-b px-5 py-4">
         <div className="flex items-center gap-2.5">
-          <Sparkle className="h-4 w-4 text-primary" />
+          <Sparkle className="text-primary h-4 w-4" />
           <div>
-            <h2 className="text-sm font-semibold tracking-tight text-foreground">
+            <h2 className="text-foreground text-sm font-semibold tracking-tight">
               Model & Routing
             </h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-0.5 text-xs">
               Dynamic model inventory from upstream endpoint.
             </p>
           </div>
@@ -425,7 +428,7 @@ export const AiRuntimeSection = ({
         />
 
         <div>
-          <p className="mb-2 font-mono text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+          <p className="text-muted-foreground mb-2 font-mono text-[10px] font-semibold tracking-wider uppercase">
             Recommended Presets
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -442,10 +445,10 @@ export const AiRuntimeSection = ({
                   onClick={() => onPresetSelect(preset)}
                   type="button"
                 >
-                  <span className="font-mono text-xs font-semibold text-foreground">
+                  <span className="text-foreground font-mono text-xs font-semibold">
                     {preset.name}
                   </span>
-                  <span className="mt-1 line-clamp-1 font-mono text-[10px] text-muted-foreground">
+                  <span className="text-muted-foreground mt-1 line-clamp-1 font-mono text-[10px]">
                     {preset.model}
                   </span>
                 </button>
@@ -457,17 +460,19 @@ export const AiRuntimeSection = ({
     </Card>
 
     <Card>
-      <CardHeader className="border-b border-border px-5 py-4">
+      <CardHeader className="border-border border-b px-5 py-4">
         <div className="flex items-center gap-2.5">
-          <SlidersHorizontal className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-semibold tracking-tight text-foreground">
+          <SlidersHorizontal className="text-primary h-4 w-4" />
+          <h2 className="text-foreground text-sm font-semibold tracking-tight">
             Endpoint & Parameters
           </h2>
         </div>
       </CardHeader>
       <CardContent className="space-y-5 p-5">
         <div className="space-y-2">
-          <Label>AI Provider</Label>
+          <span className="text-foreground text-xs font-medium">
+            AI Provider
+          </span>
           <Segmented
             onChange={onProviderChange}
             options={[
@@ -566,9 +571,11 @@ export const AiRuntimeSection = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 border-t border-border pt-5 sm:grid-cols-2">
+        <div className="border-border grid grid-cols-1 gap-4 border-t pt-5 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>Reasoning Effort</Label>
+            <span className="text-foreground text-xs font-medium">
+              Reasoning Effort
+            </span>
             <Segmented
               onChange={(v) =>
                 setSettings((prev) => ({
@@ -586,17 +593,20 @@ export const AiRuntimeSection = ({
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Access Boundary</Label>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Bot operates only in authorized groups and DMs listed in the Gateway panel. In groups, bot requires explicit mention or quote.
+            <span className="text-foreground text-xs font-medium">
+              Access Boundary
+            </span>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              Bot operates only in authorized groups and DMs listed in the
+              Gateway panel. In groups, bot requires explicit mention or quote.
             </p>
           </div>
         </div>
 
-        <div className="space-y-2 border-t border-border pt-5">
+        <div className="border-border space-y-2 border-t pt-5">
           <div className="flex items-center justify-between">
             <Label htmlFor="system_prompt">System Persona Prompt</Label>
-            <span className="font-mono text-xs text-muted-foreground tabular-nums">
+            <span className="text-muted-foreground font-mono text-xs tabular-nums">
               {settings.ai_system_prompt.length} chars
             </span>
           </div>

@@ -4,8 +4,7 @@
   --font-sans:
     Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     sans-serif;
-  --font-mono:
-    "SF Mono", "IBM Plex Mono", Menlo, Consolas, Monaco, monospace;
+  --font-mono: "SF Mono", "IBM Plex Mono", Menlo, Consolas, Monaco, monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -144,7 +143,12 @@
     overflow-x: hidden;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     letter-spacing: -0.02em;
     font-weight: 600;
   }

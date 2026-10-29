@@ -6,7 +6,7 @@ import * as React from "react";
 import { cn } from "../../lib/utils";
 
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors transition-transform focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0",
+  "focus-visible:ring-ring inline-flex items-center justify-center gap-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors transition-transform focus-visible:ring-2 focus-visible:outline-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0",
   {
     defaultVariants: {
       size: "default",
@@ -21,17 +21,17 @@ export const buttonVariants = cva(
       },
       variant: {
         default:
-          "bg-primary text-primary-foreground hover:bg-[#0457cb] shadow-sm",
+          "bg-primary text-primary-foreground shadow-sm hover:bg-[#0457cb]",
         commerce:
-          "bg-primary text-primary-foreground hover:bg-[#0457cb] shadow-sm",
+          "bg-primary text-primary-foreground shadow-sm hover:bg-[#0457cb]",
         marketing: "bg-foreground text-background hover:opacity-90",
         destructive:
-          "border border-destructive/30 bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "border-destructive/30 bg-destructive text-destructive-foreground hover:bg-destructive/90 border",
         ghost:
           "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         outline:
-          "border border-border bg-transparent text-foreground hover:bg-accent hover:text-accent-foreground",
+          "border-border text-foreground hover:bg-accent hover:text-accent-foreground border bg-transparent",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
       },
@@ -40,7 +40,8 @@ export const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }

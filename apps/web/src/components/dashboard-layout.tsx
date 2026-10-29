@@ -109,12 +109,15 @@ export const SidebarNav = ({
 
   return (
     <>
-      <div className="flex w-full items-center gap-1.5 overflow-x-auto border-b border-border bg-card p-2 md:hidden">
+      <nav
+        aria-label="Dashboard sections"
+        className="border-border bg-secondary flex w-full flex-wrap items-center gap-1.5 border-b p-2 md:hidden"
+      >
         {items.map((item) => {
           const isActive = activeNav === item.id;
           return (
             <button
-              className={`flex shrink-0 items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
+              className={`flex min-h-11 items-center gap-2 rounded-full px-3.5 py-2 text-xs font-medium transition-colors ${
                 isActive
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -128,10 +131,10 @@ export const SidebarNav = ({
             </button>
           );
         })}
-      </div>
+      </nav>
 
       <aside
-        className={`hidden shrink-0 flex-col justify-between border-r border-border bg-card transition-[width] duration-150 ease-out md:flex ${
+        className={`border-border bg-card hidden shrink-0 flex-col justify-between border-r transition-[width] duration-150 ease-out md:flex ${
           collapsed ? "w-16" : "w-64"
         }`}
       >
@@ -142,7 +145,7 @@ export const SidebarNav = ({
             }`}
           >
             <div
-              className={`flex items-center gap-2 overflow-hidden rounded-full border border-border bg-secondary/60 ${
+              className={`border-border bg-secondary/60 flex items-center gap-2 overflow-hidden rounded-full border ${
                 collapsed ? "h-8 w-8 justify-center p-0" : "px-3 py-1"
               }`}
               title={`${statusLabel} · WhatsApp gateway`}
@@ -151,14 +154,14 @@ export const SidebarNav = ({
                 <span className={`h-2 w-2 rounded-full ${dotColor}`} />
               </span>
               {!collapsed && (
-                <span className="truncate font-mono text-[11px] font-medium text-foreground">
+                <span className="text-foreground truncate font-mono text-[11px] font-medium">
                   {statusLabel}
                 </span>
               )}
             </div>
             <button
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="text-muted-foreground hover:bg-secondary hover:text-foreground flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors"
               onClick={onToggleCollapsed}
               type="button"
             >
@@ -202,7 +205,7 @@ export const SidebarNav = ({
                           className={`ml-auto max-w-[80px] shrink-0 truncate rounded-full px-2 py-0.5 font-mono text-[10px] ${
                             isActive
                               ? "bg-white/20 text-white"
-                              : "border border-border bg-secondary/80 text-muted-foreground"
+                              : "border-border bg-secondary/80 text-muted-foreground border"
                           }`}
                         >
                           {item.badge}
@@ -216,16 +219,16 @@ export const SidebarNav = ({
           </nav>
         </div>
 
-        <div className="border-t border-border p-3">
+        <div className="border-border border-t p-3">
           <div
-            className={`flex items-center gap-2 rounded-xl border border-border bg-secondary/50 text-muted-foreground ${
+            className={`border-border bg-secondary/50 text-muted-foreground flex items-center gap-2 rounded-xl border ${
               collapsed ? "h-9 justify-center" : "px-3 py-2"
             }`}
             title={model ? `${provider} · ${model}` : "No active model"}
           >
             {providerGlyph(provider)}
             {!collapsed && (
-              <span className="truncate font-mono text-[11px] text-foreground">
+              <span className="text-foreground truncate font-mono text-[11px]">
                 {model || "no model"}
               </span>
             )}
@@ -242,16 +245,16 @@ const LEVEL_VARIANT: Record<string, "destructive" | "secondary" | "warning"> = {
 };
 
 export const AuditSection = ({ logs }: { logs: AuditLog[] }) => (
-  <div className="rounded-2xl border border-border bg-card shadow-sm">
-    <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+  <div className="border-border bg-card rounded-2xl border shadow-sm">
+    <div className="border-border flex items-center justify-between border-b px-5 py-3.5">
       <div className="flex items-center gap-2.5">
-        <ArrowCounterClockwise className="h-4 w-4 text-muted-foreground" />
-        <h2 className="text-sm font-semibold tracking-tight text-foreground">
+        <ArrowCounterClockwise className="text-muted-foreground h-4 w-4" />
+        <h2 className="text-foreground text-sm font-semibold tracking-tight">
           Audit Trail
         </h2>
       </div>
       <div className="flex items-center gap-2.5">
-        <span className="font-mono text-[11px] text-muted-foreground">
+        <span className="text-muted-foreground font-mono text-[11px]">
           refresh 3s · sqlite
         </span>
         <Badge variant="secondary">{logs.length} rows</Badge>
@@ -261,17 +264,17 @@ export const AuditSection = ({ logs }: { logs: AuditLog[] }) => (
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
-          <TableRow className="border-b border-border hover:bg-transparent">
-            <TableHead className="w-20 font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
+          <TableRow className="border-border border-b hover:bg-transparent">
+            <TableHead className="text-muted-foreground w-20 font-mono text-[10px] tracking-wider uppercase">
               Level
             </TableHead>
-            <TableHead className="w-28 font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
+            <TableHead className="text-muted-foreground w-28 font-mono text-[10px] tracking-wider uppercase">
               Category
             </TableHead>
-            <TableHead className="font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
+            <TableHead className="text-muted-foreground font-mono text-[10px] tracking-wider uppercase">
               Message
             </TableHead>
-            <TableHead className="w-28 text-right font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
+            <TableHead className="text-muted-foreground w-28 text-right font-mono text-[10px] tracking-wider uppercase">
               Time
             </TableHead>
           </TableRow>
@@ -280,7 +283,7 @@ export const AuditSection = ({ logs }: { logs: AuditLog[] }) => (
           {logs.length === 0 ? (
             <TableRow>
               <TableCell
-                className="py-12 text-center font-mono text-xs text-muted-foreground"
+                className="text-muted-foreground py-12 text-center font-mono text-xs"
                 colSpan={4}
               >
                 No logs recorded yet.
@@ -291,19 +294,19 @@ export const AuditSection = ({ logs }: { logs: AuditLog[] }) => (
               const variant = LEVEL_VARIANT[log.level] ?? "secondary";
               return (
                 <TableRow
-                  className="border-b border-border/50 transition-colors last:border-0 hover:bg-secondary/40"
+                  className="border-border/50 hover:bg-secondary/40 border-b transition-colors last:border-0"
                   key={log.id}
                 >
                   <TableCell className="py-2.5">
                     <Badge variant={variant}>{log.level}</Badge>
                   </TableCell>
-                  <TableCell className="py-2.5 font-mono text-[11px] text-muted-foreground">
+                  <TableCell className="text-muted-foreground py-2.5 font-mono text-[11px]">
                     {log.category}
                   </TableCell>
-                  <TableCell className="max-w-0 py-2.5 text-xs text-foreground">
+                  <TableCell className="text-foreground max-w-0 py-2.5 text-xs">
                     <span className="block truncate">{log.message}</span>
                   </TableCell>
-                  <TableCell className="py-2.5 text-right font-mono text-[11px] text-muted-foreground tabular-nums">
+                  <TableCell className="text-muted-foreground py-2.5 text-right font-mono text-[11px] tabular-nums">
                     {log.created_at
                       ? new Date(log.created_at).toLocaleTimeString()
                       : "-"}

@@ -22,7 +22,6 @@ import {
 } from "@phosphor-icons/react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useCallback, useEffect, useState, useTransition } from "react";
-import type { ReactNode } from "react";
 import { siWhatsapp } from "simple-icons";
 
 import { AiRuntimeSection } from "../components/ai-runtime-section";
@@ -46,8 +45,8 @@ import {
   toggleSkillFn,
   triggerBotRestartFn,
 } from "../lib/server-api";
-import { getDashboardDataFn } from "../lib/server-fn";
 import type { DashboardData, ModelOption } from "../lib/server-api";
+import { getDashboardDataFn } from "../lib/server-fn";
 
 const NAV_SECTIONS: { id: NavSection; keywords: string; label: string }[] = [
   {
@@ -134,10 +133,10 @@ const GatewaySection = ({
           />
         </div>
         <div className="space-y-1">
-          <p className="text-xs font-medium text-foreground">
+          <p className="text-foreground text-xs font-medium">
             WhatsApp › Linked Devices › Link a Device
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Scan the QR code with your camera to authenticate the session.
           </p>
         </div>
@@ -150,16 +149,16 @@ const GatewaySection = ({
           <CheckCircle className="h-7 w-7" weight="fill" />
         </span>
         <div className="space-y-1.5">
-          <p className="text-base font-semibold tracking-tight text-foreground">
+          <p className="text-foreground text-base font-semibold tracking-tight">
             Gateway Online
           </p>
-          <p className="max-w-md text-xs leading-relaxed text-muted-foreground">
-            Baileys socket is verified and stable. The daemon receives incoming WhatsApp
-            events and executes the AI pipeline.
+          <p className="text-muted-foreground max-w-md text-xs leading-relaxed">
+            Baileys socket is verified and stable. The daemon receives incoming
+            WhatsApp events and executes the AI pipeline.
           </p>
         </div>
         {state.phone_number && (
-          <span className="flex items-center gap-2 rounded-full border border-border bg-secondary/60 px-3.5 py-1.5 font-mono text-xs text-foreground">
+          <span className="border-border bg-secondary/60 text-foreground flex items-center gap-2 rounded-full border px-3.5 py-1.5 font-mono text-xs">
             <SimpleIcon
               icon={siWhatsapp}
               className="h-3.5 w-3.5 text-emerald-400"
@@ -172,15 +171,16 @@ const GatewaySection = ({
   } else {
     content = (
       <div className="flex flex-col items-center gap-4 py-8 text-center">
-        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
+        <span className="bg-secondary text-muted-foreground flex h-12 w-12 items-center justify-center rounded-2xl">
           <TerminalWindow className="h-6 w-6" />
         </span>
         <div className="space-y-1.5">
-          <p className="text-sm font-medium text-foreground">
+          <p className="text-foreground text-sm font-medium">
             Daemon Not Running
           </p>
-          <p className="max-w-md text-xs text-muted-foreground">
-            Start the bot process in your terminal to open the WhatsApp connection:
+          <p className="text-muted-foreground max-w-md text-xs">
+            Start the bot process in your terminal to open the WhatsApp
+            connection:
           </p>
         </div>
         <code className="kbd text-xs">bun run dev:all</code>
@@ -191,14 +191,14 @@ const GatewaySection = ({
   return (
     <div className="space-y-5">
       {/* Top Main Pairing Panel */}
-      <div className="rounded-2xl border border-border bg-card shadow-sm">
-        <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+      <div className="border-border bg-card rounded-2xl border shadow-sm">
+        <div className="border-border flex items-center justify-between border-b px-5 py-3.5">
           <div className="flex items-center gap-2.5">
             <SimpleIcon
               icon={siWhatsapp}
               className="h-4 w-4 text-emerald-400"
             />
-            <h2 className="text-sm font-semibold tracking-tight text-foreground">
+            <h2 className="text-foreground text-sm font-semibold tracking-tight">
               WhatsApp Pairing
             </h2>
           </div>
@@ -210,12 +210,12 @@ const GatewaySection = ({
       {/* Balanced 2-Column Bento Grid */}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         {/* Left Column: Group Access */}
-        <div className="rounded-2xl border border-border bg-card shadow-sm flex flex-col justify-between">
+        <div className="border-border bg-card flex flex-col justify-between rounded-2xl border shadow-sm">
           <div>
-            <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+            <div className="border-border flex items-center justify-between border-b px-5 py-3.5">
               <div className="flex items-center gap-2.5">
-                <UsersThree className="h-4 w-4 text-primary" />
-                <h2 className="text-sm font-semibold tracking-tight text-foreground">
+                <UsersThree className="text-primary h-4 w-4" />
+                <h2 className="text-foreground text-sm font-semibold tracking-tight">
                   Group Access
                 </h2>
               </div>
@@ -239,20 +239,21 @@ const GatewaySection = ({
                 rows={4}
                 value={settings.allowed_groups.join("\n")}
               />
-              <p className="text-[11px] leading-relaxed text-muted-foreground">
-                One group JID per line. Empty = no group is served. Bot answers when mentioned or quoted.
+              <p className="text-muted-foreground text-[11px] leading-relaxed">
+                One group JID per line. Empty = no group is served. Bot answers
+                when mentioned or quoted.
               </p>
             </div>
           </div>
         </div>
 
         {/* Right Column: Private Access & Owner */}
-        <div className="rounded-2xl border border-border bg-card shadow-sm flex flex-col justify-between">
+        <div className="border-border bg-card flex flex-col justify-between rounded-2xl border shadow-sm">
           <div>
-            <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+            <div className="border-border flex items-center justify-between border-b px-5 py-3.5">
               <div className="flex items-center gap-2.5">
-                <ShieldCheck className="h-4 w-4 text-primary" />
-                <h2 className="text-sm font-semibold tracking-tight text-foreground">
+                <ShieldCheck className="text-primary h-4 w-4" />
+                <h2 className="text-foreground text-sm font-semibold tracking-tight">
                   Private Access
                 </h2>
               </div>
@@ -276,8 +277,15 @@ const GatewaySection = ({
                 rows={2}
                 value={settings.allowed_users.join("\n")}
               />
+              <p className="text-muted-foreground text-[11px] leading-relaxed">
+                Add phone numbers, one per line. Linked WhatsApp LID chats match
+                automatically; saving takes effect without restarting.
+              </p>
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground" htmlFor="owner_jid">
+                <Label
+                  className="text-muted-foreground text-xs"
+                  htmlFor="owner_jid"
+                >
                   Owner Handle
                 </Label>
                 <Input
@@ -301,14 +309,14 @@ const GatewaySection = ({
       {/* Bottom Grid: Runtime Parameters & Command Reference */}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         {/* Runtime Parameters */}
-        <div className="rounded-2xl border border-border bg-card shadow-sm">
-          <div className="flex items-center gap-2.5 border-b border-border px-5 py-3.5">
-            <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold tracking-tight text-foreground">
+        <div className="border-border bg-card rounded-2xl border shadow-sm">
+          <div className="border-border flex items-center gap-2.5 border-b px-5 py-3.5">
+            <SlidersHorizontal className="text-muted-foreground h-4 w-4" />
+            <h2 className="text-foreground text-sm font-semibold tracking-tight">
               Runtime Parameters
             </h2>
           </div>
-          <dl className="divide-y divide-border/60">
+          <dl className="divide-border/60 divide-y">
             {[
               ["Command prefix", settings.bot_prefix],
               ["Group access", `${settings.allowed_groups.length} allowed`],
@@ -321,7 +329,7 @@ const GatewaySection = ({
                 key={k}
               >
                 <dt className="text-muted-foreground">{k}</dt>
-                <dd className="max-w-[60%] truncate font-mono text-foreground font-medium">
+                <dd className="text-foreground max-w-[60%] truncate font-mono font-medium">
                   {v}
                 </dd>
               </div>
@@ -330,23 +338,23 @@ const GatewaySection = ({
         </div>
 
         {/* Command Reference */}
-        <div className="rounded-2xl border border-border bg-card shadow-sm">
-          <div className="flex items-center gap-2.5 border-b border-border px-5 py-3.5">
-            <Terminal className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold tracking-tight text-foreground">
+        <div className="border-border bg-card rounded-2xl border shadow-sm">
+          <div className="border-border flex items-center gap-2.5 border-b px-5 py-3.5">
+            <Terminal className="text-muted-foreground h-4 w-4" />
+            <h2 className="text-foreground text-sm font-semibold tracking-tight">
               Command Reference
             </h2>
           </div>
-          <div className="divide-y divide-border/60">
+          <div className="divide-border/60 divide-y">
             {COMMAND_REF.map((c) => (
               <div
-                className="px-5 py-2.5 transition-colors hover:bg-secondary/40"
+                className="hover:bg-secondary/40 px-5 py-2.5 transition-colors"
                 key={c.name}
               >
-                <p className="font-mono text-xs font-semibold text-primary">
+                <p className="text-primary font-mono text-xs font-semibold">
                   {c.name}
                 </p>
-                <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
+                <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
                   {c.desc}
                 </p>
               </div>
@@ -387,11 +395,11 @@ const SkillsSection = ({
   showSkillForm: boolean;
   skills: SkillRecord[];
 }) => (
-  <div className="rounded-2xl border border-border bg-card shadow-sm">
-    <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+  <div className="border-border bg-card rounded-2xl border shadow-sm">
+    <div className="border-border flex items-center justify-between border-b px-5 py-3.5">
       <div className="flex items-center gap-2.5">
-        <Code className="h-4 w-4 text-muted-foreground" />
-        <h2 className="text-sm font-semibold tracking-tight text-foreground">
+        <Code className="text-muted-foreground h-4 w-4" />
+        <h2 className="text-foreground text-sm font-semibold tracking-tight">
           Skills
         </h2>
         <Badge variant="secondary">{skills.length}</Badge>
@@ -408,7 +416,7 @@ const SkillsSection = ({
 
     {showSkillForm && (
       <form
-        className="animate-fade-in space-y-3.5 border-b border-border bg-secondary/30 p-5"
+        className="animate-fade-in border-border bg-secondary/30 space-y-3.5 border-b p-5"
         onSubmit={handleCreateSkillSubmit}
       >
         <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
@@ -460,20 +468,20 @@ const SkillsSection = ({
       </form>
     )}
 
-    <div className="divide-y divide-border/60">
+    <div className="divide-border/60 divide-y">
       {skills.length === 0 ? (
-        <div className="py-12 text-center font-mono text-xs text-muted-foreground">
+        <div className="text-muted-foreground py-12 text-center font-mono text-xs">
           No skills registered.
         </div>
       ) : (
         skills.map((skill) => (
           <div
-            className="flex items-center justify-between gap-4 p-4 transition-colors hover:bg-secondary/40"
+            className="hover:bg-secondary/40 flex items-center justify-between gap-4 p-4 transition-colors"
             key={skill.name}
           >
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-semibold text-foreground">
+                <span className="text-foreground font-mono text-xs font-semibold">
                   {skill.name}
                 </span>
                 <Badge variant={skill.enabled ? "success" : "secondary"}>
@@ -481,7 +489,7 @@ const SkillsSection = ({
                 </Badge>
               </div>
               {skill.description && (
-                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
                   {skill.description}
                 </p>
               )}
@@ -495,7 +503,7 @@ const SkillsSection = ({
               />
               <Button
                 aria-label={`Delete ${skill.name}`}
-                className="h-8 w-8 rounded-full text-muted-foreground hover:bg-destructive/15 hover:text-destructive"
+                className="text-muted-foreground hover:bg-destructive/15 hover:text-destructive h-8 w-8 rounded-full"
                 onClick={() => handleDeleteSkill(skill.name)}
                 size="icon"
                 variant="ghost"
@@ -517,11 +525,11 @@ const ToolsSection = ({
   enabledTools: string[];
   onToggleTool: (toolId: string) => void;
 }) => (
-  <div className="rounded-2xl border border-border bg-card shadow-sm">
-    <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+  <div className="border-border bg-card rounded-2xl border shadow-sm">
+    <div className="border-border flex items-center justify-between border-b px-5 py-3.5">
       <div className="flex items-center gap-2.5">
-        <Wrench className="h-4 w-4 text-muted-foreground" />
-        <h2 className="text-sm font-semibold tracking-tight text-foreground">
+        <Wrench className="text-muted-foreground h-4 w-4" />
+        <h2 className="text-foreground text-sm font-semibold tracking-tight">
           Tools
         </h2>
       </div>
@@ -529,12 +537,12 @@ const ToolsSection = ({
         {enabledTools.length} / {AVAILABLE_TOOLS.length} active
       </Badge>
     </div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-border/60">
+    <div className="divide-border/60 grid grid-cols-1 divide-y sm:grid-cols-2 sm:divide-x sm:divide-y-0">
       {AVAILABLE_TOOLS.map((tool) => {
         const isEnabled = enabledTools.includes(tool.id);
         return (
           <div
-            className={`flex items-start justify-between gap-3.5 p-4 transition-colors border-b border-border/60 ${
+            className={`border-border/60 flex items-start justify-between gap-3.5 border-b p-4 transition-colors ${
               isEnabled ? "bg-secondary/30" : ""
             }`}
             key={tool.name}
@@ -547,7 +555,7 @@ const ToolsSection = ({
               >
                 {tool.name}
               </p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
                 {tool.description}
               </p>
             </div>
@@ -629,6 +637,15 @@ const DashboardPage = () => {
     [settings.ai_api_key, settings.ai_base_url]
   );
 
+  useEffect(() => {
+    if (activeNav === "ai_runtime" && !isFetchingModels && !modelsFetchError) {
+      const timer = setTimeout(() => {
+        void loadModels();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [activeNav, isFetchingModels, modelsFetchError, loadModels]);
+
   const notify = (msg: string) => {
     setFeedbackMsg(msg);
     setTimeout(() => setFeedbackMsg(null), 3000);
@@ -676,7 +693,9 @@ const DashboardPage = () => {
           data: { currentEnabled, name },
         });
         setSkills((prev) =>
-          prev.map((s) => (s.name === name ? { ...s, enabled: res.enabled } : s))
+          prev.map((s) =>
+            s.name === name ? { ...s, enabled: res.enabled } : s
+          )
         );
         notify(`Skill "${name}" ${res.enabled ? "activated" : "disabled"}`);
       } catch (error) {
@@ -698,7 +717,7 @@ const DashboardPage = () => {
           data: {
             body: newSkillBody,
             description: newSkillDesc,
-            name: newSkillName.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
+            name: newSkillName.toLowerCase().replaceAll(/[^a-z0-9-]/gu, "-"),
           },
         });
         setSkills((prev) => [...prev, created]);
@@ -716,9 +735,6 @@ const DashboardPage = () => {
   };
 
   const handleDeleteSkill = (name: string) => {
-    if (!confirm(`Delete skill "${name}"?`)) {
-      return;
-    }
     startTransition(async () => {
       try {
         await deleteSkillFn({ data: { name } });
@@ -813,7 +829,7 @@ const DashboardPage = () => {
   const visual = getStatusVisual(state.status);
 
   return (
-    <div className="flex min-h-0 w-full flex-1 overflow-hidden">
+    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden md:flex-row">
       <SidebarNav
         activeNav={activeNav}
         collapsed={collapsed}
@@ -828,14 +844,14 @@ const DashboardPage = () => {
         toolsCount={settings.tools_enabled?.length || 0}
       />
 
-      <main className="flex-1 overflow-y-auto p-5 sm:p-6 lg:p-8">
+      <main className="min-h-0 w-full min-w-0 flex-1 overflow-y-auto p-5 sm:p-6 lg:p-8">
         <div className="mx-auto max-w-5xl space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-5">
+          <div className="border-border flex flex-wrap items-center justify-between gap-3 border-b pb-5">
             <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold tracking-tight text-foreground">
+              <h1 className="text-foreground text-xl font-bold tracking-tight">
                 {NAV_SECTIONS.find((s) => s.id === activeNav)?.label}
               </h1>
-              <span className="flex items-center gap-1.5 rounded-full border border-border bg-secondary/60 px-3 py-1 font-mono text-xs text-foreground">
+              <span className="border-border bg-secondary/60 text-foreground flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-xs">
                 <span
                   className={`h-2 w-2 rounded-full ${visual.dot} ${state.status === "connecting" || state.status === "qr_ready" ? "animate-pulse" : ""}`}
                 />
@@ -909,7 +925,7 @@ const DashboardPage = () => {
       <CommandPalette commands={paletteCommands} />
 
       {feedbackMsg && (
-        <div className="animate-fade-in fixed right-4 bottom-4 z-40 rounded-full border border-border bg-card px-4 py-2 text-xs font-medium text-foreground shadow-xl">
+        <div className="animate-fade-in border-border bg-card text-foreground fixed right-4 bottom-4 z-40 rounded-full border px-4 py-2 text-xs font-medium shadow-xl">
           {feedbackMsg}
         </div>
       )}

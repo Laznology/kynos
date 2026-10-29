@@ -6,11 +6,11 @@ import { Header } from "../components/header";
 import appCss from "../styles.css?url";
 
 const RootDocument = ({ children }: { children: React.ReactNode }) => (
-  <html lang="id" className="dark h-full">
+  <html lang="en" className="dark h-full">
     <head>
       <HeadContent />
     </head>
-    <body className="flex h-screen flex-col overflow-hidden bg-background text-foreground antialiased selection:bg-primary selection:text-white">
+    <body className="bg-background text-foreground selection:bg-primary flex h-screen flex-col overflow-hidden antialiased selection:text-white">
       <Header />
       <div className="flex min-h-0 flex-1 overflow-hidden">{children}</div>
       <Footer />

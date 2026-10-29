@@ -21,15 +21,31 @@ export const CommandPalette = ({
   const [query, setQuery] = useState("");
   const [activeIdx, setActiveIdx] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
+  const closePalette = () => {
+    setOpen(false);
+    setQuery("");
+    setActiveIdx(0);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setOpen((v) => !v);
+        setOpen((v) => {
+          if (v) {
+            setQuery("");
+            setActiveIdx(0);
+            return false;
+          }
+          return true;
+        });
       }
     };
-    const handleCustomOpen = () => setOpen(true);
+    const handleCustomOpen = () => {
+      setQuery("");
+      setActiveIdx(0);
+      setOpen(true);
+    };
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("kynos:palette-open", handleCustomOpen);
@@ -45,19 +61,16 @@ export const CommandPalette = ({
       return commands;
     }
     return commands.filter((c) => {
-      const hay = `${c.label} ${c.group} ${c.hint ?? ""} ${c.keywords ?? ""}`.toLowerCase();
+      const hay =
+        `${c.label} ${c.group} ${c.hint ?? ""} ${c.keywords ?? ""}`.toLowerCase();
       return hay.includes(q);
     });
   }, [commands, query]);
 
-  const active = Math.min(Math.max(0, activeIdx), Math.max(0, filtered.length - 1));
-
-  useEffect(() => {
-    if (!open) {
-      setQuery("");
-      setActiveIdx(0);
-    }
-  }, [open]);
+  const active = Math.min(
+    Math.max(0, activeIdx),
+    Math.max(0, filtered.length - 1)
+  );
 
   useEffect(() => {
     const el = listRef.current?.querySelector(`[data-row="${active}"]`);
@@ -69,7 +82,7 @@ export const CommandPalette = ({
   const runAt = (idx: number) => {
     const target = filtered[idx];
     if (target) {
-      setOpen(false);
+      closePalette();
       target.action();
     }
   };
@@ -88,17 +101,17 @@ export const CommandPalette = ({
       <button
         aria-label="Close command palette"
         className="animate-overlay-in absolute inset-0 h-full w-full cursor-default bg-black/70 backdrop-blur-sm"
-        onClick={() => setOpen(false)}
+        onClick={closePalette}
         tabIndex={-1}
         type="button"
       />
-      <div className="animate-palette-in relative mt-[10vh] w-[calc(100vw-2rem)] max-w-[540px] overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
-        <div className="flex items-center gap-2.5 border-b border-border px-4 py-3">
-          <MagnifyingGlass className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <div className="animate-palette-in border-border bg-card relative mt-[10vh] w-[calc(100vw-2rem)] max-w-[540px] overflow-hidden rounded-2xl border shadow-2xl">
+        <div className="border-border flex items-center gap-2.5 border-b px-4 py-3">
+          <MagnifyingGlass className="text-muted-foreground h-4 w-4 shrink-0" />
           <input
             aria-label="Search commands"
             autoFocus
-            className="h-7 w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+            className="text-foreground placeholder:text-muted-foreground h-7 w-full bg-transparent text-sm outline-none"
             onChange={(e) => {
               setQuery(e.target.value);
               setActiveIdx(0);
@@ -106,7 +119,7 @@ export const CommandPalette = ({
             onKeyDown={(e) => {
               if (e.key === "Escape") {
                 e.preventDefault();
-                setOpen(false);
+                closePalette();
               }
               if (e.key === "ArrowDown") {
                 e.preventDefault();
@@ -128,7 +141,7 @@ export const CommandPalette = ({
 
         <div className="max-h-[46vh] overflow-y-auto p-2" ref={listRef}>
           {filtered.length === 0 && (
-            <p className="px-3 py-8 text-center text-xs text-muted-foreground">
+            <p className="text-muted-foreground px-3 py-8 text-center text-xs">
               No matching commands.
             </p>
           )}
@@ -137,7 +150,7 @@ export const CommandPalette = ({
             return (
               <div key={`${c.group}-${c.id}`}>
                 {showHeader && (
-                  <p className="sticky top-0 z-10 bg-card px-3 pt-2 pb-1 font-mono text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                  <p className="bg-card text-muted-foreground sticky top-0 z-10 px-3 pt-2 pb-1 font-mono text-[10px] font-semibold tracking-wider uppercase">
                     {c.group}
                   </p>
                 )}
@@ -154,7 +167,9 @@ export const CommandPalette = ({
                 >
                   <span
                     className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${
-                      idx === active ? "text-primary-foreground" : "text-muted-foreground"
+                      idx === active
+                        ? "text-primary-foreground"
+                        : "text-muted-foreground"
                     } [&_svg]:h-3.5 [&_svg]:w-3.5`}
                   >
                     {c.icon ?? "›"}
@@ -163,7 +178,9 @@ export const CommandPalette = ({
                   {c.hint && (
                     <span
                       className={`ml-auto shrink-0 font-mono text-[10px] ${
-                        idx === active ? "text-primary-foreground/80" : "text-muted-foreground"
+                        idx === active
+                          ? "text-primary-foreground/80"
+                          : "text-muted-foreground"
                       }`}
                     >
                       {c.hint}
@@ -175,7 +192,7 @@ export const CommandPalette = ({
           })}
         </div>
 
-        <div className="flex items-center justify-between border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
+        <div className="border-border text-muted-foreground flex items-center justify-between border-t px-4 py-2.5 text-xs">
           <div className="flex items-center gap-2">
             <span className="kbd">↑↓</span>
             <span>navigate</span>
