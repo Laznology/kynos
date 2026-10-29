@@ -8,16 +8,11 @@ import type {
 } from "@kynos/shared";
 import {
   ArrowCounterClockwise,
-  ArrowsClockwise,
-  Brain,
-  ChatCircleText,
   CheckCircle,
-  ClockCounterClockwise,
   Code,
   FloppyDisk,
   Plus,
   ShieldCheck,
-  SidebarSimple,
   SlidersHorizontal,
   Terminal,
   TerminalWindow,
@@ -51,6 +46,7 @@ import {
   toggleSkillFn,
   triggerBotRestartFn,
 } from "../lib/server-api";
+import { getDashboardDataFn } from "../lib/server-fn";
 import type { DashboardData, ModelOption } from "../lib/server-api";
 
 const NAV_SECTIONS: { id: NavSection; keywords: string; label: string }[] = [
@@ -924,7 +920,7 @@ const DashboardPage = () => {
 export const Route = createFileRoute("/")({
   loader: async (): Promise<DashboardData> => {
     try {
-      return await fetchDashboardData();
+      return await getDashboardDataFn();
     } catch {
       throw redirect({ to: "/login" });
     }
