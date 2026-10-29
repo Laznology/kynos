@@ -89,9 +89,23 @@ describe("Group gating", () => {
     expect(dm).toContain("628999");
   });
 
-  it("mention or quote of the bot triggers, others do not", () => {
+  it("mention or quote bot triggers, others do not", () => {
     expect(isBotTriggered({ mentionedJid: [BOT_JID] }, BOT_ID)).toBe(true);
     expect(isBotTriggered({ participant: BOT_JID }, BOT_ID)).toBe(true);
+    expect(
+      isBotTriggered(
+        { participant: "123456789:0@lid" },
+        BOT_ID,
+        "123456789@lid"
+      )
+    ).toBe(true);
+    expect(
+      isBotTriggered(
+        { mentionedJid: ["123456789@lid"] },
+        BOT_ID,
+        "123456789@lid"
+      )
+    ).toBe(true);
     expect(
       isBotTriggered({ mentionedJid: ["628999@s.whatsapp.net"] }, BOT_ID)
     ).toBe(false);

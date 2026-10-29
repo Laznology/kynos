@@ -54,11 +54,35 @@ export const buildAccessDeniedReply = (
 
 export const isBotTriggered = (
   contextInfo: proto.IContextInfo | null | undefined,
-  botUserId?: string
+  botUserId?: string,
+  botUserLid?: string
 ): boolean => {
-  const botJid = `${botUserId?.split(":")[0]}@s.whatsapp.net`;
-  if (contextInfo?.mentionedJid?.includes(botJid)) {
+  if (!contextInfo) {
+    return false;
+  }
+  const botJid = botUserId ? jidNormalizedUser(botUserId) : undefined;
+  const botLid = botUserLid ? jidNormalizedUser(botUserLid) : undefined;
+
+  const mentions = new Set(
+    (contextInfo.mentionedJid || []).map(jidNormalizedUser)
+  );
+  if (botJid && mentions.has(botJid)) {
     return true;
   }
-  return contextInfo?.participant === botJid;
+  if (botLid && mentions.has(botLid)) {
+    return true;
+  }
+
+  const participant = contextInfo.participant
+    ? jidNormalizedUser(contextInfo.participant)
+    : undefined;
+
+  if (botJid && participant === botJid) {
+    return true;
+  }
+  if (botLid && participant === botLid) {
+    return true;
+  }
+
+  return false;
 };

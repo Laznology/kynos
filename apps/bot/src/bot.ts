@@ -9,12 +9,14 @@ import {
   markReminderSent,
   updateBotState,
 } from "@kynos/db";
+import type { AppSettings } from "@kynos/shared";
 import {
   makeWASocket,
   DisconnectReason,
   fetchLatestBaileysVersion,
   useMultiFileAuthState,
   downloadMediaMessage,
+  jidNormalizedUser,
 } from "@whiskeysockets/baileys";
 import type {
   WASocket,
@@ -66,16 +68,51 @@ mkdirSync(AUTH_DIR, { recursive: true });
 
 const logger = pino({ level: "error" });
 
-const extractMessageText = (m: WAMessage["message"]): string => {
+const unwrapMessage = (m: WAMessage["message"]): WAMessage["message"] => {
   if (!m) {
+    return m;
+  }
+  if (m.ephemeralMessage?.message) {
+    return unwrapMessage(m.ephemeralMessage.message);
+  }
+  if (m.viewOnceMessage?.message) {
+    return unwrapMessage(m.viewOnceMessage.message);
+  }
+  if (m.viewOnceMessageV2?.message) {
+    return unwrapMessage(m.viewOnceMessageV2.message);
+  }
+  if (m.documentWithCaptionMessage?.message) {
+    return unwrapMessage(m.documentWithCaptionMessage.message);
+  }
+  return m;
+};
+
+const extractContextInfo = (m: WAMessage["message"]) => {
+  const unwrapped = unwrapMessage(m);
+  if (!unwrapped) {
+    return;
+  }
+  return (
+    unwrapped.extendedTextMessage?.contextInfo ||
+    unwrapped.imageMessage?.contextInfo ||
+    unwrapped.videoMessage?.contextInfo ||
+    unwrapped.stickerMessage?.contextInfo ||
+    unwrapped.documentMessage?.contextInfo ||
+    unwrapped.audioMessage?.contextInfo
+  );
+};
+
+const extractMessageText = (m: WAMessage["message"]): string => {
+  const unwrapped = unwrapMessage(m);
+  if (!unwrapped) {
     return "";
   }
   const text =
-    m.conversation ||
-    m.extendedTextMessage?.text ||
-    m.imageMessage?.caption ||
-    m.videoMessage?.caption ||
-    m.documentMessage?.caption ||
+    unwrapped.conversation ||
+    unwrapped.extendedTextMessage?.text ||
+    unwrapped.imageMessage?.caption ||
+    unwrapped.videoMessage?.caption ||
+    unwrapped.documentMessage?.caption ||
     "";
   return text.trim();
 };
@@ -93,23 +130,23 @@ const downloadBufferSafe = async (
 const extractMedia = async (
   msg: WAMessage
 ): Promise<{ mediaBuffer?: Buffer; mimetype?: string }> => {
-  const m = msg.message;
-  if (!m) {
+  const unwrapped = unwrapMessage(msg.message);
+  if (!unwrapped) {
     return {};
   }
-  if (m.imageMessage) {
+  if (unwrapped.imageMessage) {
     return {
       mediaBuffer: await downloadBufferSafe(msg),
-      mimetype: m.imageMessage.mimetype || "image/jpeg",
+      mimetype: unwrapped.imageMessage.mimetype || "image/jpeg",
     };
   }
-  if (m.videoMessage) {
+  if (unwrapped.videoMessage) {
     return {
       mediaBuffer: await downloadBufferSafe(msg),
-      mimetype: m.videoMessage.mimetype || "video/mp4",
+      mimetype: unwrapped.videoMessage.mimetype || "video/mp4",
     };
   }
-  if (m.stickerMessage) {
+  if (unwrapped.stickerMessage) {
     return {
       mediaBuffer: await downloadBufferSafe(msg),
       mimetype: "image/webp",
@@ -185,18 +222,6 @@ const sendMediaMessage = async (
     jid,
     { caption, document: buffer, mimetype: "application/octet-stream" },
     { quoted }
-  );
-};
-
-const extractContextInfo = (m: WAMessage["message"]) => {
-  if (!m) {
-    return;
-  }
-  return (
-    m.extendedTextMessage?.contextInfo ||
-    m.imageMessage?.contextInfo ||
-    m.videoMessage?.contextInfo ||
-    m.stickerMessage?.contextInfo
   );
 };
 
@@ -371,6 +396,36 @@ export class KynosWhatsAppBot {
     }
   }
 
+  private async ensureMessageAccess(
+    jid: string,
+    sender: string,
+    isGroup: boolean,
+    settings: AppSettings,
+    remoteJidAlt?: string
+  ): Promise<boolean> {
+    if (!this.sock) {
+      return false;
+    }
+    let alternateJid = remoteJidAlt;
+    if (!alternateJid && jid.endsWith("@lid")) {
+      alternateJid =
+        (await this.sock.signalRepository.lidMapping.getPNForLID(jid)) ??
+        undefined;
+    }
+
+    const allowed = isGroup
+      ? isGroupAllowed(settings.allowed_groups, jid)
+      : isPrivateChatAllowed(settings.allowed_users, jid, alternateJid);
+
+    if (!allowed && shouldSendDenial(jid)) {
+      await this.sock.sendMessage(jid, {
+        text: buildAccessDeniedReply(settings.owner_jid, jid, sender, isGroup),
+      });
+    }
+
+    return allowed;
+  }
+
   private async handleMessage(msg: WAMessage): Promise<void> {
     if (!this.sock || !msg.key?.remoteJid) {
       return;
@@ -379,29 +434,15 @@ export class KynosWhatsAppBot {
     const isGroup = jid.endsWith("@g.us");
     const sender = msg.key.participant || jid;
     const senderName = msg.pushName || undefined;
-
     const settings = getSettings();
-    const alternateJid =
-      msg.key.remoteJidAlt ||
-      (jid.endsWith("@lid")
-        ? ((await this.sock.signalRepository.lidMapping.getPNForLID(jid)) ??
-          undefined)
-        : undefined);
-    const allowed = isGroup
-      ? isGroupAllowed(settings.allowed_groups, jid)
-      : isPrivateChatAllowed(settings.allowed_users, jid, alternateJid);
-
-    if (!allowed) {
-      if (shouldSendDenial(jid)) {
-        await this.sock.sendMessage(jid, {
-          text: buildAccessDeniedReply(
-            settings.owner_jid,
-            jid,
-            sender,
-            isGroup
-          ),
-        });
-      }
+    const hasAccess = await this.ensureMessageAccess(
+      jid,
+      sender,
+      isGroup,
+      settings,
+      msg.key.remoteJidAlt
+    );
+    if (!hasAccess) {
       return;
     }
 
@@ -443,7 +484,10 @@ export class KynosWhatsAppBot {
       return;
     }
 
-    if (isGroup && !isBotTriggered(contextInfo, this.sock.user?.id)) {
+    if (
+      isGroup &&
+      !isBotTriggered(contextInfo, this.sock.user?.id, this.sock.user?.lid)
+    ) {
       return;
     }
 
