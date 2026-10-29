@@ -28,6 +28,7 @@ import qrcode from "qrcode-terminal";
 import { renderSVG } from "uqr";
 
 import { runKynosAgent } from "./agent";
+import { formatUserPrompt } from "./agent/prompt";
 import { dispatchCommand } from "./commands";
 import type { CommandContext } from "./commands";
 import {
@@ -155,46 +156,107 @@ const extractMedia = async (
   return {};
 };
 
-const extractQuoted = async (
-  msg: WAMessage
-): Promise<CommandContext["quoted"]> => {
-  const m = msg.message;
-  if (!m) {
-    return undefined;
+const parseQuotedMediaMeta = (
+  m: WAMessage["message"]
+): { isAnimated: boolean; isSticker: boolean; mimetype: string } => {
+  if (m?.stickerMessage) {
+    return {
+      isAnimated: Boolean(m.stickerMessage.isAnimated),
+      isSticker: true,
+      mimetype: "image/webp",
+    };
   }
-  const contextInfo =
-    m.extendedTextMessage?.contextInfo ||
-    m.imageMessage?.contextInfo ||
-    m.videoMessage?.contextInfo ||
-    m.stickerMessage?.contextInfo;
+  if (m?.imageMessage) {
+    return {
+      isAnimated: false,
+      isSticker: false,
+      mimetype: m.imageMessage.mimetype || "image/jpeg",
+    };
+  }
+  if (m?.videoMessage) {
+    return {
+      isAnimated: false,
+      isSticker: false,
+      mimetype: m.videoMessage.mimetype || "video/mp4",
+    };
+  }
+  if (m?.documentMessage) {
+    return {
+      isAnimated: false,
+      isSticker: false,
+      mimetype: m.documentMessage.mimetype || "application/octet-stream",
+    };
+  }
+  if (m?.audioMessage) {
+    return {
+      isAnimated: false,
+      isSticker: false,
+      mimetype: m.audioMessage.mimetype || "audio/ogg",
+    };
+  }
+  return { isAnimated: false, isSticker: false, mimetype: "" };
+};
+
+const checkIsFromBot = (
+  participant?: string,
+  botJid?: string,
+  botLid?: string,
+  isGroup = false
+): boolean => {
+  if (participant) {
+    return Boolean(
+      (botJid && participant === botJid) || (botLid && participant === botLid)
+    );
+  }
+  return !isGroup;
+};
+
+const extractQuoted = async (
+  msg: WAMessage,
+  botUserId?: string,
+  botUserLid?: string,
+  isGroup = false,
+  senderJid?: string
+): Promise<CommandContext["quoted"]> => {
+  const contextInfo = extractContextInfo(msg.message);
   const qm = contextInfo?.quotedMessage;
   if (!qm) {
-    return undefined;
+    return;
   }
 
-  const qMessage = { key: msg.key, message: qm } as WAMessage;
+  const unwrappedQm = unwrapMessage(qm);
+  if (!unwrappedQm) {
+    return;
+  }
+
+  const qMessage = { key: msg.key, message: unwrappedQm } as WAMessage;
   const qMediaBuffer = await downloadBufferSafe(qMessage);
+  const meta = parseQuotedMediaMeta(unwrappedQm);
+  const quotedText = extractMessageText(unwrappedQm);
 
-  let qMime = "";
-  let isSticker = false;
-  let isAnimated = false;
+  const rawParticipant = contextInfo?.participant;
+  const normalizedParticipant = rawParticipant
+    ? jidNormalizedUser(rawParticipant)
+    : undefined;
+  const normBotJid = botUserId ? jidNormalizedUser(botUserId) : undefined;
+  const normBotLid = botUserLid ? jidNormalizedUser(botUserLid) : undefined;
+  const normSender = senderJid ? jidNormalizedUser(senderJid) : undefined;
 
-  if (qm.stickerMessage) {
-    qMime = "image/webp";
-    isSticker = true;
-    isAnimated = Boolean(qm.stickerMessage.isAnimated);
-  } else if (qm.imageMessage) {
-    qMime = qm.imageMessage.mimetype || "image/jpeg";
-  } else if (qm.videoMessage) {
-    qMime = qm.videoMessage.mimetype || "video/mp4";
-  }
+  const isFromMe = checkIsFromBot(
+    normalizedParticipant,
+    normBotJid,
+    normBotLid,
+    isGroup
+  );
 
   return {
-    isAnimated,
-    isSticker,
+    isAnimated: meta.isAnimated,
+    isFromMe,
+    isSticker: meta.isSticker,
     mediaBuffer: qMediaBuffer,
-    mimetype: qMime,
-    text: (qm.conversation || qm.extendedTextMessage?.text) ?? undefined,
+    mimetype: meta.mimetype,
+    sender: normalizedParticipant || (isFromMe ? normBotJid : normSender),
+    text: quotedText || undefined,
   };
 };
 
@@ -448,7 +510,13 @@ export class KynosWhatsAppBot {
 
     const text = extractMessageText(msg.message);
     const { mediaBuffer, mimetype } = await extractMedia(msg);
-    const quoted = await extractQuoted(msg);
+    const quoted = await extractQuoted(
+      msg,
+      this.sock.user?.id,
+      this.sock.user?.lid,
+      isGroup,
+      sender
+    );
 
     const prefix = settings.bot_prefix || "/";
     const contextInfo = extractContextInfo(msg.message);
@@ -491,7 +559,7 @@ export class KynosWhatsAppBot {
       return;
     }
 
-    const prompt = text || quoted?.text;
+    const prompt = formatUserPrompt(text, quoted);
     if (!prompt) {
       return;
     }

@@ -14,6 +14,8 @@ export interface CommandContext {
     mimetype?: string;
     isSticker?: boolean;
     isAnimated?: boolean;
+    sender?: string;
+    isFromMe?: boolean;
   };
   reply: (text: string) => Promise<void>;
   replyMedia: (

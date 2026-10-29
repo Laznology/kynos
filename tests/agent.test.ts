@@ -6,6 +6,7 @@ import { destr } from "destr";
 import {
   buildKynosSystemPrompt,
   extractThoughts,
+  formatUserPrompt,
 } from "../apps/bot/src/agent/prompt";
 import {
   calculatorTool,
@@ -104,8 +105,43 @@ describe("Agent Core & Tools (Vercel AI SDK)", () => {
     expect(tools.web_search).toBeUndefined();
   });
 
-  it("exposes no tools when the allowlist is empty", () => {
+  it("exposes no tools when allowlist is empty", () => {
     const tools = getAgentTools({ jid: "test@s.whatsapp.net" }, []);
     expect(Object.keys(tools)).toEqual([]);
+  });
+
+  it("formats user prompt with quoted message context", () => {
+    const plain = formatUserPrompt("Halo bot");
+    expect(plain).toBe("Halo bot");
+
+    const withQuote = formatUserPrompt("apa ini?", {
+      sender: "628123456789:1@s.whatsapp.net",
+      text: "Laporan kuartal 3 selesai",
+    });
+    expect(withQuote).toContain("[Quoted message from 628123456789]");
+    expect(withQuote).toContain('"Laporan kuartal 3 selesai"');
+    expect(withQuote).toContain("User message: apa ini?");
+
+    const fromBot = formatUserPrompt("jelaskan lagi", {
+      isFromMe: true,
+      text: "Berikut langkah pertama",
+    });
+    expect(fromBot).toContain("[Quoted message from Kynos (you)]");
+    expect(fromBot).toContain("User message: jelaskan lagi");
+
+    const stickerOnly = formatUserPrompt("buatkan gambar serupa", {
+      isSticker: true,
+      sender: "628999@s.whatsapp.net",
+    });
+    expect(stickerOnly).toContain("[Quoted sticker from 628999]");
+    expect(stickerOnly).toContain("User message: buatkan gambar serupa");
+
+    const quoteOnly = formatUserPrompt("", {
+      sender: "628111@s.whatsapp.net",
+      text: "Catatan penting meeting",
+    });
+    expect(quoteOnly).toBe(
+      '[Quoted message from 628111]:\n"Catatan penting meeting"'
+    );
   });
 });
