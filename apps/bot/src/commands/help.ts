@@ -32,9 +32,7 @@ Kirim pesan langsung (atau mention di grup) untuk berinteraksi dengan AI:
 - Weather Forecast (prakiraan cuaca global)
 - Web Summarizer (rangkum konten URL)
 - Reminder Scheduler (jadwal pengingat otomatis)
-- User Memory (mengingat preferensi pengguna)
-
-_Web Dashboard:_ Akses http://localhost:3000 untuk konfigurasi model dan API key.`;
+- User Memory (mengingat preferensi pengguna)`;
 
     await ctx.reply(text);
   },
