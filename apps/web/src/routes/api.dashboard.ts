@@ -11,10 +11,15 @@ import {
 import type { AppSettings } from "@kynos/shared";
 import { createFileRoute } from "@tanstack/react-router";
 
+import { getSessionFromRequest } from "../lib/auth";
+
 export const Route = createFileRoute("/api/dashboard")({
-  server: {
-    handlers: {
-      GET: () => {
+ server: {
+ handlers: {
+ GET: ({ request }) => {
+ if (!getSessionFromRequest(request)) {
+ return Response.json({ error: "Unauthorized" }, { status: 401 });
+ }
         const payload = {
           logs: getAuditLogs(20),
           settings: getSettings(),
@@ -24,6 +29,9 @@ export const Route = createFileRoute("/api/dashboard")({
         return Response.json(payload);
       },
       POST: async ({ request }) => {
+ if (!getSessionFromRequest(request)) {
+ return Response.json({ error: "Unauthorized" }, { status: 401 });
+ }
         try {
           const body = (await request.json()) as {
             action: string;

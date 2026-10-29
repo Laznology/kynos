@@ -1,7 +1,8 @@
-import { Robot } from "@phosphor-icons/react";
+import { Robot, SignOut } from "@phosphor-icons/react";
 import { Link } from "@tanstack/react-router";
 import { siBun, siSqlite } from "simple-icons";
 
+import { logoutFn } from "../lib/server-api";
 import { SimpleIcon } from "./ui/simple-icon";
 
 export const Header = () => (
@@ -39,6 +40,19 @@ export const Header = () => (
           type="button"
         >
           ⌘K
+        </button>
+        <button
+          aria-label="Sign out"
+          className="flex items-center gap-1 rounded-sm border border-white/[0.07] bg-white/[0.02] px-2 py-1 font-mono text-[10px] text-zinc-400 transition-colors hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400"
+          onClick={async () => {
+            await logoutFn();
+            window.location.href = "/login";
+          }}
+          title="Logout"
+          type="button"
+        >
+          <SignOut className="h-3 w-3" />
+          <span className="hidden sm:inline">Logout</span>
         </button>
       </div>
     </nav>

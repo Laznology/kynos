@@ -24,7 +24,7 @@ import {
   UsersThree,
   Wrench,
 } from "@phosphor-icons/react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import type { ReactNode } from "react";
 import { siWhatsapp } from "simple-icons";
@@ -951,6 +951,12 @@ const DashboardPage = () => {
 };
 
 export const Route = createFileRoute("/")({
-  loader: async (): Promise<DashboardData> => await fetchDashboardData(),
-  component: DashboardPage,
+ loader: async (): Promise<DashboardData> => {
+ try {
+ return await fetchDashboardData();
+ } catch {
+ throw redirect({ to: "/login" });
+ }
+ },
+ component: DashboardPage,
 });

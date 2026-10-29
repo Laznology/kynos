@@ -21,16 +21,22 @@ export interface ModelOption {
   owned_by?: string;
 }
 
-export const fetchDashboardData = async (): Promise<DashboardData> => {
-  const url =
-    typeof window === "undefined"
-      ? "http://localhost:3000/api/dashboard"
-      : "/api/dashboard";
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch dashboard data: ${res.statusText}`);
-  }
-  return (await res.json()) as DashboardData;
+export const fetchDashboardData = async (
+ cookieHeader?: string
+): Promise<DashboardData> => {
+ const url =
+ typeof window === "undefined"
+ ? "http://localhost:3000/api/dashboard"
+ : "/api/dashboard";
+ const headers: Record<string, string> = {};
+ if (cookieHeader) {
+ headers.cookie = cookieHeader;
+ }
+ const res = await fetch(url, { headers });
+ if (!res.ok) {
+ throw new Error(`Failed to fetch dashboard data: ${res.statusText}`);
+ }
+ return (await res.json()) as DashboardData;
 };
 
 export const fetchAvailableModels = async (
@@ -129,4 +135,24 @@ export const triggerBotRestartFn = async (): Promise<{
     method: "POST",
   });
   return (await res.json()) as { message: string; ok: boolean };
+};
+
+export const loginFn = async (
+ password: string
+): Promise<{ ok: boolean; error?: string }> => {
+ const res = await fetch("/api/auth", {
+ body: JSON.stringify({ action: "login", password }),
+ headers: { "Content-Type": "application/json" },
+ method: "POST",
+ });
+ return (await res.json()) as { ok: boolean; error?: string };
+};
+
+export const logoutFn = async (): Promise<{ ok: boolean }> => {
+ const res = await fetch("/api/auth", {
+ body: JSON.stringify({ action: "logout" }),
+ headers: { "Content-Type": "application/json" },
+ method: "POST",
+ });
+ return (await res.json()) as { ok: boolean };
 };

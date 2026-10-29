@@ -1,6 +1,7 @@
 import { getSettings } from "@kynos/db";
 import { createFileRoute } from "@tanstack/react-router";
 
+import { getSessionFromRequest } from "../lib/auth";
 export interface ModelItem {
   context_length?: number;
   description?: string;
@@ -14,6 +15,9 @@ export const Route = createFileRoute("/api/models")({
   server: {
     handlers: {
       GET: async ({ request }) => {
+ if (!getSessionFromRequest(request)) {
+ return Response.json({ error: "Unauthorized" }, { status: 401 });
+ }
         try {
           const url = new URL(request.url);
           const currentSettings = getSettings();
