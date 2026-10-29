@@ -21,7 +21,7 @@ export const Route = createFileRoute("/api/dashboard")({
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
         const payload = {
-          logs: getAuditLogs(20),
+          logs: getAuditLogs(100),
           settings: getSettings(),
           skills: getSkills(),
           state: getBotState(),
