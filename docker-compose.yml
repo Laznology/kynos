@@ -18,13 +18,14 @@ services:
       context: .
       target: web
     environment:
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
       KYNOS_DATA_DIR: /data
       PORT: "3000"
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env}
     image: ghcr.io/ilazer/kynos-web:latest
     init: true
     ports:
-      - "3000:3000"
-    restart: unless-stopped
+      - "${WEB_PORT:-3000}:3000"
     volumes:
       - kynos-data:/data
 
