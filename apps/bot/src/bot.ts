@@ -32,7 +32,7 @@ import {
   buildAccessDeniedReply,
   isBotTriggered,
   isGroupAllowed,
-  isUserAllowed,
+  isPrivateChatAllowed,
   shouldSendDenial,
 } from "./gating";
 
@@ -381,9 +381,15 @@ export class KynosWhatsAppBot {
     const senderName = msg.pushName || undefined;
 
     const settings = getSettings();
+    const alternateJid =
+      msg.key.remoteJidAlt ||
+      (jid.endsWith("@lid")
+        ? ((await this.sock.signalRepository.lidMapping.getPNForLID(jid)) ??
+          undefined)
+        : undefined);
     const allowed = isGroup
       ? isGroupAllowed(settings.allowed_groups, jid)
-      : isUserAllowed(settings.allowed_users, jid);
+      : isPrivateChatAllowed(settings.allowed_users, jid, alternateJid);
 
     if (!allowed) {
       if (shouldSendDenial(jid)) {

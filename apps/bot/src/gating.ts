@@ -1,3 +1,4 @@
+import { jidNormalizedUser } from "@whiskeysockets/baileys";
 import type { proto } from "@whiskeysockets/baileys";
 
 const DENIAL_WINDOW_MS = 10 * 60 * 1000;
@@ -12,6 +13,20 @@ export const isUserAllowed = (
   allowedUsers: string[],
   userJid: string
 ): boolean => allowedUsers.includes(userJid);
+
+export const isPrivateChatAllowed = (
+  allowedUsers: string[],
+  chatJid: string,
+  alternateJid?: string
+): boolean => {
+  if (isUserAllowed(allowedUsers, jidNormalizedUser(chatJid))) {
+    return true;
+  }
+  return (
+    !!alternateJid &&
+    isUserAllowed(allowedUsers, jidNormalizedUser(alternateJid))
+  );
+};
 
 export const shouldSendDenial = (jid: string, now = Date.now()): boolean => {
   const last = lastDenialAt.get(jid);

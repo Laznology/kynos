@@ -4,6 +4,7 @@ import {
   buildAccessDeniedReply,
   isBotTriggered,
   isGroupAllowed,
+  isPrivateChatAllowed,
   isUserAllowed,
   shouldSendDenial,
 } from "../apps/bot/src/gating";
@@ -22,6 +23,43 @@ describe("Group gating", () => {
     expect(isUserAllowed([], BOT_JID)).toBe(false);
     expect(isUserAllowed([BOT_JID], BOT_JID)).toBe(true);
     expect(isUserAllowed([BOT_JID], "628999@s.whatsapp.net")).toBe(false);
+  });
+
+  it("allows a private LID chat when its paired phone number is allowlisted", () => {
+    expect(
+      isPrivateChatAllowed(
+        ["6289648576347@s.whatsapp.net"],
+        "61573305507874@lid",
+        "6289648576347:72@s.whatsapp.net"
+      )
+    ).toBe(true);
+  });
+
+  it("allows an ordinary private chat by its direct phone JID", () => {
+    expect(
+      isPrivateChatAllowed(
+        ["6289648576347@s.whatsapp.net"],
+        "6289648576347@s.whatsapp.net"
+      )
+    ).toBe(true);
+  });
+  it("keeps an LID chat blocked when its alternate phone is not allowlisted", () => {
+    expect(
+      isPrivateChatAllowed(
+        ["6289648576347@s.whatsapp.net"],
+        "61573305507874@lid",
+        "6281111111111@s.whatsapp.net"
+      )
+    ).toBe(false);
+  });
+
+  it("keeps unmatched LID chats blocked", () => {
+    expect(
+      isPrivateChatAllowed(
+        ["6289648576347@s.whatsapp.net"],
+        "61573305507874@lid"
+      )
+    ).toBe(false);
   });
 
   it("denial reply is throttled per chat", () => {
