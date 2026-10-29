@@ -16,6 +16,7 @@ import {
   Code,
   FloppyDisk,
   Plus,
+  ShieldCheck,
   SidebarSimple,
   SlidersHorizontal,
   Terminal,
@@ -52,18 +53,10 @@ import {
 } from "../lib/server-api";
 import type { DashboardData, ModelOption } from "../lib/server-api";
 
-const NAV_ICON: Record<NavSection, ReactNode> = {
-  ai_runtime: <Brain />,
-  audit: <ClockCounterClockwise />,
-  gateway: <ChatCircleText />,
-  skills: <Code />,
-  tools: <Wrench />,
-};
-
 const NAV_SECTIONS: { id: NavSection; keywords: string; label: string }[] = [
   {
     id: "gateway",
-    keywords: "whatsapp pairing qr device session",
+    keywords: "pairing qr code session status whatsapp connection",
     label: "Gateway",
   },
   {
@@ -96,10 +89,10 @@ const getStatusVisual = (status: BotStatus) => {
     };
   }
   if (status === "qr_ready") {
-    return { dot: "bg-sky-400", label: "qr ready", variant: "info" as const };
+    return { dot: "bg-primary", label: "qr ready", variant: "info" as const };
   }
   return {
-    dot: "bg-rose-500",
+    dot: "bg-destructive",
     label: "offline",
     variant: "destructive" as const,
   };
@@ -135,7 +128,7 @@ const GatewaySection = ({
   if (state.status === "qr_ready" && state.qr_code) {
     content = (
       <div className="flex flex-col items-center gap-4 py-6 text-center">
-        <div className="w-fit rounded-xs border border-white/20 bg-white p-3">
+        <div className="w-fit rounded-2xl border border-white/20 bg-white p-4 shadow-xl">
           <img
             alt="WhatsApp pairing QR code"
             className="h-56 w-56 sm:h-64 sm:w-64"
@@ -145,10 +138,10 @@ const GatewaySection = ({
           />
         </div>
         <div className="space-y-1">
-          <p className="text-xs text-zinc-300">
+          <p className="text-xs font-medium text-foreground">
             WhatsApp › Linked Devices › Link a Device
           </p>
-          <p className="text-[11px] text-zinc-500">
+          <p className="text-xs text-muted-foreground">
             Scan the QR code with your camera to authenticate the session.
           </p>
         </div>
@@ -156,24 +149,24 @@ const GatewaySection = ({
     );
   } else if (state.status === "connected") {
     content = (
-      <div className="flex flex-col items-center gap-3.5 py-8 text-center">
-        <span className="flex h-11 w-11 items-center justify-center rounded-sm border border-emerald-500/25 bg-emerald-500/12 text-emerald-300">
-          <CheckCircle className="h-5.5 w-5.5" weight="fill" />
+      <div className="flex flex-col items-center gap-4 py-8 text-center">
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
+          <CheckCircle className="h-7 w-7" weight="fill" />
         </span>
-        <div className="space-y-1">
-          <p className="text-[13px] font-semibold tracking-tight text-zinc-100">
-            Gateway online
+        <div className="space-y-1.5">
+          <p className="text-base font-semibold tracking-tight text-foreground">
+            Gateway Online
           </p>
-          <p className="max-w-sm text-[11px] leading-relaxed text-zinc-500">
-            Baileys socket is stable. The bot receives messages and runs the AI
-            pipeline.
+          <p className="max-w-md text-xs leading-relaxed text-muted-foreground">
+            Baileys socket is verified and stable. The daemon receives incoming WhatsApp
+            events and executes the AI pipeline.
           </p>
         </div>
         {state.phone_number && (
-          <span className="flex items-center gap-1.5 rounded-sm border border-white/[0.07] bg-white/[0.02] px-2 py-1 font-mono text-[11px] text-zinc-300">
+          <span className="flex items-center gap-2 rounded-full border border-border bg-secondary/60 px-3.5 py-1.5 font-mono text-xs text-foreground">
             <SimpleIcon
               icon={siWhatsapp}
-              className="h-3 w-3 text-emerald-400"
+              className="h-3.5 w-3.5 text-emerald-400"
             />
             +{state.phone_number}
           </span>
@@ -182,67 +175,157 @@ const GatewaySection = ({
     );
   } else {
     content = (
-      <div className="flex flex-col items-center gap-3.5 py-8 text-center">
-        <span className="flex h-10 w-10 items-center justify-center rounded-sm border border-white/[0.08] bg-white/[0.03] text-zinc-500">
-          <TerminalWindow className="h-5 w-5" />
+      <div className="flex flex-col items-center gap-4 py-8 text-center">
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
+          <TerminalWindow className="h-6 w-6" />
         </span>
-        <div className="space-y-1">
-          <p className="text-xs font-medium text-zinc-200">
-            Daemon not running
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium text-foreground">
+            Daemon Not Running
           </p>
-          <p className="max-w-sm text-[11px] text-zinc-500">
-            Start the bot process to open the connection:
+          <p className="max-w-md text-xs text-muted-foreground">
+            Start the bot process in your terminal to open the WhatsApp connection:
           </p>
         </div>
-        <code className="kbd text-[11px]">bun run dev:all</code>
+        <code className="kbd text-xs">bun run dev:all</code>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-      <div className="lg:col-span-7">
-        <div className="rounded-md border border-white/[0.07] bg-[#0a0a0d]">
-          <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-2.5">
-            <div className="flex items-center gap-2">
-              <SimpleIcon
-                icon={siWhatsapp}
-                className="h-3.5 w-3.5 text-zinc-400"
-              />
-              <h2 className="text-[13px] font-semibold tracking-tight text-zinc-100">
-                Pairing
-              </h2>
-            </div>
-            <Badge variant="secondary">baileys v7</Badge>
+    <div className="space-y-5">
+      {/* Top Main Pairing Panel */}
+      <div className="rounded-2xl border border-border bg-card shadow-sm">
+        <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+          <div className="flex items-center gap-2.5">
+            <SimpleIcon
+              icon={siWhatsapp}
+              className="h-4 w-4 text-emerald-400"
+            />
+            <h2 className="text-sm font-semibold tracking-tight text-foreground">
+              WhatsApp Pairing
+            </h2>
           </div>
-          <div className="p-4">{content}</div>
+          <Badge variant="secondary">baileys v7</Badge>
+        </div>
+        <div className="p-6">{content}</div>
+      </div>
+
+      {/* Balanced 2-Column Bento Grid */}
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        {/* Left Column: Group Access */}
+        <div className="rounded-2xl border border-border bg-card shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+              <div className="flex items-center gap-2.5">
+                <UsersThree className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-semibold tracking-tight text-foreground">
+                  Group Access
+                </h2>
+              </div>
+              <Badge variant="secondary">
+                {settings.allowed_groups.length} groups
+              </Badge>
+            </div>
+            <div className="space-y-3 p-5">
+              <Textarea
+                className="font-mono text-xs"
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    allowed_groups: e.target.value
+                      .split("\n")
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                  }))
+                }
+                placeholder={"12036xxxxx@g.us\n12036yyyyy@g.us"}
+                rows={4}
+                value={settings.allowed_groups.join("\n")}
+              />
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                One group JID per line. Empty = no group is served. Bot answers when mentioned or quoted.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Private Access & Owner */}
+        <div className="rounded-2xl border border-border bg-card shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+              <div className="flex items-center gap-2.5">
+                <ShieldCheck className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-semibold tracking-tight text-foreground">
+                  Private Access
+                </h2>
+              </div>
+              <Badge variant="secondary">
+                {settings.allowed_users.length} users
+              </Badge>
+            </div>
+            <div className="space-y-3.5 p-5">
+              <Textarea
+                className="font-mono text-xs"
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    allowed_users: e.target.value
+                      .split("\n")
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                  }))
+                }
+                placeholder={"6281234567890\n+62 812-3456-7890"}
+                rows={2}
+                value={settings.allowed_users.join("\n")}
+              />
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground" htmlFor="owner_jid">
+                  Owner Handle
+                </Label>
+                <Input
+                  className="font-mono text-xs"
+                  id="owner_jid"
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      owner_jid: e.target.value,
+                    }))
+                  }
+                  placeholder="@ilazer"
+                  value={settings.owner_jid}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-4 lg:col-span-5">
-        <div className="rounded-md border border-white/[0.07] bg-[#0a0a0d]">
-          <div className="flex items-center gap-2 border-b border-white/[0.07] px-4 py-2.5">
-            <SlidersHorizontal className="h-3.5 w-3.5 text-zinc-500" />
-            <h2 className="text-[13px] font-semibold tracking-tight text-zinc-100">
-              Runtime parameters
+      {/* Bottom Grid: Runtime Parameters & Command Reference */}
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        {/* Runtime Parameters */}
+        <div className="rounded-2xl border border-border bg-card shadow-sm">
+          <div className="flex items-center gap-2.5 border-b border-border px-5 py-3.5">
+            <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold tracking-tight text-foreground">
+              Runtime Parameters
             </h2>
           </div>
-          <dl>
+          <dl className="divide-y divide-border/60">
             {[
               ["Command prefix", settings.bot_prefix],
               ["Group access", `${settings.allowed_groups.length} allowed`],
               ["Private access", `${settings.allowed_users.length} allowed`],
               ["Sticker pack", settings.sticker_pack_name],
-              ["Reasoning", settings.ai_reasoning_effort],
-            ].map(([k, v], i) => (
+              ["Reasoning effort", settings.ai_reasoning_effort],
+            ].map(([k, v]) => (
               <div
-                className={`flex items-center justify-between px-4 py-2 ${
-                  i < 3 ? "border-b border-white/[0.04]" : ""
-                }`}
+                className="flex items-center justify-between px-5 py-2.5 text-xs"
                 key={k}
               >
-                <dt className="text-[11px] text-zinc-500">{k}</dt>
-                <dd className="max-w-[60%] truncate font-mono text-[11px] text-zinc-200">
+                <dt className="text-muted-foreground">{k}</dt>
+                <dd className="max-w-[60%] truncate font-mono text-foreground font-medium">
                   {v}
                 </dd>
               </div>
@@ -250,111 +333,29 @@ const GatewaySection = ({
           </dl>
         </div>
 
-        <div className="rounded-md border border-white/[0.07] bg-[#0a0a0d]">
-          <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-2.5">
-            <div className="flex items-center gap-2">
-              <UsersThree className="h-3.5 w-3.5 text-zinc-500" />
-              <h2 className="text-[13px] font-semibold tracking-tight text-zinc-100">
-                Group access
-              </h2>
-            </div>
-            <Badge variant="secondary">{settings.allowed_groups.length}</Badge>
-          </div>
-          <div className="space-y-2 p-4">
-            <Textarea
-              className="font-mono text-[11px]"
-              onChange={(e) =>
-                setSettings((prev) => ({
-                  ...prev,
-                  allowed_groups: e.target.value
-                    .split("\n")
-                    .map((s) => s.trim())
-                    .filter(Boolean),
-                }))
-              }
-              placeholder={"12036xxxxx@g.us\n12036yyyyy@g.us"}
-              rows={3}
-              value={settings.allowed_groups.join("\n")}
-            />
-            <p className="text-[10px] leading-relaxed text-zinc-600">
-              One group JID per line. Empty = no group is served. The bot only
-              answers in an allowed group when mentioned or its message is
-              quoted.
-            </p>
-          </div>
-        </div>
-
-        <div className="rounded-md border border-white/[0.07] bg-[#0a0a0d]">
-          <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-2.5">
-            <div className="flex items-center gap-2">
-              <UsersThree className="h-3.5 w-3.5 text-zinc-500" />
-              <h2 className="text-[13px] font-semibold tracking-tight text-zinc-100">
-                Private access
-              </h2>
-            </div>
-            <Badge variant="secondary">{settings.allowed_users.length}</Badge>
-          </div>
-          <div className="space-y-3 p-4">
-            <Textarea
-              className="font-mono text-[11px]"
-              onChange={(e) =>
-                setSettings((prev) => ({
-                  ...prev,
-                  allowed_users: e.target.value
-                    .split("\n")
-                    .map((s) => s.trim())
-                    .filter(Boolean),
-                }))
-              }
-              placeholder={"6281234567890\n+62 812-3456-7890"}
-              rows={3}
-              value={settings.allowed_users.join("\n")}
-            />
-            <div className="space-y-1.5">
-              <Label className="text-[11px] text-zinc-500" htmlFor="owner_jid">
-                Owner handle
-              </Label>
-              <Input
-                className="font-mono text-[11px]"
-                id="owner_jid"
-                onChange={(e) =>
-                  setSettings((prev) => ({
-                    ...prev,
-                    owner_jid: e.target.value,
-                  }))
-                }
-                placeholder="@ilazer"
-                value={settings.owner_jid}
-              />
-            </div>
-            <p className="text-[10px] leading-relaxed text-zinc-600">
-              One phone number per line, country code included; saved as
-              62xxx@s.whatsapp.net. Empty = no DM is served. The handle is
-              quoted in the denial reply sent to unlisted chats.
-            </p>
-          </div>
-        </div>
-
-        <div className="rounded-md border border-white/[0.07] bg-[#0a0a0d]">
-          <div className="flex items-center gap-2 border-b border-white/[0.07] px-4 py-2.5">
-            <Terminal className="h-3.5 w-3.5 text-zinc-500" />
-            <h2 className="text-[13px] font-semibold tracking-tight text-zinc-100">
-              Command reference
+        {/* Command Reference */}
+        <div className="rounded-2xl border border-border bg-card shadow-sm">
+          <div className="flex items-center gap-2.5 border-b border-border px-5 py-3.5">
+            <Terminal className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold tracking-tight text-foreground">
+              Command Reference
             </h2>
           </div>
-          {COMMAND_REF.map((c, i) => (
-            <div
-              className={`px-4 py-2.5 transition-colors hover:bg-white/[0.015] ${
-                i < COMMAND_REF.length - 1 ? "border-b border-white/[0.04]" : ""
-              }`}
-              key={c.name}
-            >
-              <p className="font-mono text-[11px] font-medium text-zinc-100">
-                {c.name}
-              </p>
-              <p className="mt-0.5 text-[11px] text-zinc-500">{c.desc}</p>
-            </div>
-          ))}
+          <div className="divide-y divide-border/60">
+            {COMMAND_REF.map((c) => (
+              <div
+                className="px-5 py-2.5 transition-colors hover:bg-secondary/40"
+                key={c.name}
+              >
+                <p className="font-mono text-xs font-semibold text-primary">
+                  {c.name}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
+                  {c.desc}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -390,11 +391,11 @@ const SkillsSection = ({
   showSkillForm: boolean;
   skills: SkillRecord[];
 }) => (
-  <div className="rounded-md border border-white/[0.07] bg-[#0a0a0d]">
-    <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-2.5">
-      <div className="flex items-center gap-2">
-        <Code className="h-3.5 w-3.5 text-zinc-500" />
-        <h2 className="text-[13px] font-semibold tracking-tight text-zinc-100">
+  <div className="rounded-2xl border border-border bg-card shadow-sm">
+    <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+      <div className="flex items-center gap-2.5">
+        <Code className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-sm font-semibold tracking-tight text-foreground">
           Skills
         </h2>
         <Badge variant="secondary">{skills.length}</Badge>
@@ -404,17 +405,17 @@ const SkillsSection = ({
         size="sm"
         variant="secondary"
       >
-        <Plus />
+        <Plus className="h-3.5 w-3.5" />
         New skill
       </Button>
     </div>
 
     {showSkillForm && (
       <form
-        className="animate-fade-in space-y-3 border-b border-white/[0.07] p-4"
+        className="animate-fade-in space-y-3.5 border-b border-border bg-secondary/30 p-5"
         onSubmit={handleCreateSkillSubmit}
       >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="skill_name">Name (kebab-case)</Label>
             <Input
@@ -438,7 +439,7 @@ const SkillsSection = ({
         <div className="space-y-1.5">
           <Label htmlFor="skill_body">Instructions (markdown)</Label>
           <Textarea
-            className="font-mono text-[11px]"
+            className="font-mono text-xs"
             id="skill_body"
             onChange={(e) => setNewSkillBody(e.target.value)}
             placeholder="# Steps..."
@@ -447,69 +448,69 @@ const SkillsSection = ({
             value={newSkillBody}
           />
         </div>
-        <div className="flex justify-end gap-1.5">
+        <div className="flex justify-end gap-2">
           <Button
             onClick={() => setShowSkillForm(false)}
             size="sm"
+            type="button"
             variant="ghost"
           >
             Cancel
           </Button>
           <Button disabled={isPending} size="sm" type="submit">
-            Save
+            Create skill
           </Button>
         </div>
       </form>
     )}
 
-    {skills.length === 0 ? (
-      <p className="px-4 py-10 text-center font-mono text-[11px] text-zinc-600">
-        No skills yet. The agent records them automatically when it spots a
-        working pattern, or create one manually.
-      </p>
-    ) : (
-      <ul>
-        {skills.map((skill) => (
-          <li
-            className="flex items-center justify-between gap-3 border-b border-white/[0.04] px-4 py-3 last:border-0"
+    <div className="divide-y divide-border/60">
+      {skills.length === 0 ? (
+        <div className="py-12 text-center font-mono text-xs text-muted-foreground">
+          No skills registered.
+        </div>
+      ) : (
+        skills.map((skill) => (
+          <div
+            className="flex items-center justify-between gap-4 p-4 transition-colors hover:bg-secondary/40"
             key={skill.name}
           >
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="truncate font-mono text-[11px] font-medium text-zinc-100">
+                <span className="font-mono text-xs font-semibold text-foreground">
                   {skill.name}
                 </span>
                 <Badge variant={skill.enabled ? "success" : "secondary"}>
-                  {skill.enabled ? "enabled" : "disabled"}
+                  {skill.enabled ? "active" : "disabled"}
                 </Badge>
               </div>
-              <p className="mt-0.5 truncate text-[11px] text-zinc-500">
-                {skill.description}
-              </p>
+              {skill.description && (
+                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                  {skill.description}
+                </p>
+              )}
             </div>
-            <div className="flex shrink-0 items-center gap-1">
-              <Button
-                disabled={isPending}
-                onClick={() => handleToggleSkill(skill.name, skill.enabled)}
-                size="sm"
-                variant="ghost"
-              >
-                {skill.enabled ? "Disable" : "Enable"}
-              </Button>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={skill.enabled}
+                onCheckedChange={() =>
+                  handleToggleSkill(skill.name, skill.enabled)
+                }
+              />
               <Button
                 aria-label={`Delete ${skill.name}`}
-                disabled={isPending}
+                className="h-8 w-8 rounded-full text-muted-foreground hover:bg-destructive/15 hover:text-destructive"
                 onClick={() => handleDeleteSkill(skill.name)}
                 size="icon"
                 variant="ghost"
               >
-                <Trash className="hover:text-rose-300" />
+                <Trash className="h-4 w-4" />
               </Button>
             </div>
-          </li>
-        ))}
-      </ul>
-    )}
+          </div>
+        ))
+      )}
+    </div>
   </div>
 );
 
@@ -520,37 +521,37 @@ const ToolsSection = ({
   enabledTools: string[];
   onToggleTool: (toolId: string) => void;
 }) => (
-  <div className="rounded-md border border-white/[0.07] bg-[#0a0a0d]">
-    <div className="flex items-center gap-2 border-b border-white/[0.07] px-4 py-2.5">
-      <Wrench className="h-3.5 w-3.5 text-zinc-500" />
-      <h2 className="text-[13px] font-semibold tracking-tight text-zinc-100">
-        Tools
-      </h2>
+  <div className="rounded-2xl border border-border bg-card shadow-sm">
+    <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+      <div className="flex items-center gap-2.5">
+        <Wrench className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-sm font-semibold tracking-tight text-foreground">
+          Tools
+        </h2>
+      </div>
       <Badge variant="secondary">
-        {enabledTools.length} / {AVAILABLE_TOOLS.length}
+        {enabledTools.length} / {AVAILABLE_TOOLS.length} active
       </Badge>
     </div>
-    <div className="grid grid-cols-1 sm:grid-cols-2">
-      {AVAILABLE_TOOLS.map((tool, i) => {
+    <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-border/60">
+      {AVAILABLE_TOOLS.map((tool) => {
         const isEnabled = enabledTools.includes(tool.id);
         return (
           <div
-            className={`flex items-start justify-between gap-3 border-white/[0.04] p-3.5 ${
-              i % 2 === 0 ? "border-r" : ""
-            } ${i < AVAILABLE_TOOLS.length - (AVAILABLE_TOOLS.length % 2) ? "border-b" : ""} ${
-              isEnabled ? "bg-white/[0.02]" : ""
+            className={`flex items-start justify-between gap-3.5 p-4 transition-colors border-b border-border/60 ${
+              isEnabled ? "bg-secondary/30" : ""
             }`}
             key={tool.name}
           >
             <div className="min-w-0">
               <p
-                className={`font-mono text-[11px] font-medium ${
-                  isEnabled ? "text-zinc-100" : "text-zinc-500"
+                className={`font-mono text-xs font-semibold ${
+                  isEnabled ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
                 {tool.name}
               </p>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-zinc-500">
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                 {tool.description}
               </p>
             </div>
@@ -567,7 +568,7 @@ const ToolsSection = ({
 
 const DashboardPage = () => {
   const initialData = Route.useLoaderData();
-  const [activeNav, setActiveNav] = useState<NavSection>("ai_runtime");
+  const [activeNav, setActiveNav] = useState<NavSection>("gateway");
 
   const [settings, setSettings] = useState<AppSettings>(initialData.settings);
   const [state, setState] = useState<BotState>(initialData.state);
@@ -632,78 +633,19 @@ const DashboardPage = () => {
     [settings.ai_api_key, settings.ai_base_url]
   );
 
-  useEffect(() => {
-    if (!settings.ai_base_url) {
-      return;
-    }
-    const timer = setTimeout(() => {
-      loadModels(settings.ai_base_url, settings.ai_api_key);
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [loadModels, settings.ai_api_key, settings.ai_base_url]);
-
-  const handleProviderChange = (provider: AppSettings["ai_provider"]) => {
-    const urls: Record<string, string> = {
-      custom: settings.ai_base_url,
-      groq: "https://api.groq.com/openai/v1",
-      ollama: "http://localhost:11434/v1",
-      openai: "https://api.openai.com/v1",
-      openrouter: "https://openrouter.ai/api/v1",
-    };
-    const baseUrl = urls[provider] ?? settings.ai_base_url;
-    setSettings((prev) => ({
-      ...prev,
-      ai_base_url: baseUrl,
-      ai_provider: provider,
-    }));
-    loadModels(baseUrl, settings.ai_api_key);
-  };
-
-  const handlePresetSelect = (presetId: string) => {
-    let baseUrl = "https://openrouter.ai/api/v1";
-    let provider: AppSettings["ai_provider"] = "openrouter";
-    if (presetId.includes("groq") || presetId.includes("versatile")) {
-      baseUrl = "https://api.groq.com/openai/v1";
-      provider = "groq";
-    } else if (
-      presetId.includes("ollama") ||
-      presetId.includes("hermes3:latest")
-    ) {
-      baseUrl = "http://localhost:11434/v1";
-      provider = "ollama";
-    }
-    setSettings((prev) => ({
-      ...prev,
-      ai_base_url: baseUrl,
-      ai_model: presetId,
-      ai_provider: provider,
-    }));
-    loadModels(baseUrl, settings.ai_api_key);
-  };
-
-  const handleToggleTool = (toolId: string) => {
-    setSettings((prev) => {
-      const current = prev.tools_enabled || [];
-      const exists = current.includes(toolId);
-      return {
-        ...prev,
-        tools_enabled: exists
-          ? current.filter((t) => t !== toolId)
-          : [...current, toolId],
-      };
-    });
+  const notify = (msg: string) => {
+    setFeedbackMsg(msg);
+    setTimeout(() => setFeedbackMsg(null), 3000);
   };
 
   const handleSaveSettings = () => {
-    setFeedbackMsg("Saving configuration...");
     startTransition(async () => {
       try {
         const updated = await saveSettingsFn({ data: settings });
         setSettings(updated);
-        setFeedbackMsg("Saved to SQLite.");
-        setTimeout(() => setFeedbackMsg(null), 3000);
+        notify("Settings saved");
       } catch (error) {
-        setFeedbackMsg(
+        notify(
           `Save failed: ${error instanceof Error ? error.message : String(error)}`
         );
       }
@@ -711,45 +653,39 @@ const DashboardPage = () => {
   };
 
   const handleRestartBot = () => {
-    setFeedbackMsg("Reloading daemon...");
     startTransition(async () => {
       try {
-        await triggerBotRestartFn();
-        setFeedbackMsg("Reload signal sent.");
-        setTimeout(() => setFeedbackMsg(null), 3000);
+        const res = await triggerBotRestartFn();
+        notify(res.message);
       } catch (error) {
-        setFeedbackMsg(
-          `Reload failed: ${error instanceof Error ? error.message : String(error)}`
+        notify(
+          `Restart failed: ${error instanceof Error ? error.message : String(error)}`
         );
       }
     });
+  };
+
+  const handleToggleTool = (toolId: string) => {
+    const current = settings.tools_enabled || [];
+    const next = current.includes(toolId)
+      ? current.filter((id) => id !== toolId)
+      : [...current, toolId];
+    setSettings((prev) => ({ ...prev, tools_enabled: next }));
   };
 
   const handleToggleSkill = (name: string, currentEnabled: boolean) => {
     startTransition(async () => {
       try {
-        const res = await toggleSkillFn({ data: { currentEnabled, name } });
+        const res = await toggleSkillFn({
+          data: { currentEnabled, name },
+        });
         setSkills((prev) =>
-          prev.map((s) =>
-            s.name === name ? { ...s, enabled: res.enabled } : s
-          )
+          prev.map((s) => (s.name === name ? { ...s, enabled: res.enabled } : s))
         );
+        notify(`Skill "${name}" ${res.enabled ? "activated" : "disabled"}`);
       } catch (error) {
-        setFeedbackMsg(
+        notify(
           `Toggle failed: ${error instanceof Error ? error.message : String(error)}`
-        );
-      }
-    });
-  };
-
-  const handleDeleteSkill = (name: string) => {
-    startTransition(async () => {
-      try {
-        await deleteSkillFn({ data: { name } });
-        setSkills((prev) => prev.filter((s) => s.name !== name));
-      } catch (error) {
-        setFeedbackMsg(
-          `Delete failed: ${error instanceof Error ? error.message : String(error)}`
         );
       }
     });
@@ -758,7 +694,6 @@ const DashboardPage = () => {
   const handleCreateSkillSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSkillName.trim() || !newSkillBody.trim()) {
-      setFeedbackMsg("Skill name and instructions are required.");
       return;
     }
     startTransition(async () => {
@@ -767,7 +702,7 @@ const DashboardPage = () => {
           data: {
             body: newSkillBody,
             description: newSkillDesc,
-            name: newSkillName,
+            name: newSkillName.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
           },
         });
         setSkills((prev) => [...prev, created]);
@@ -775,72 +710,108 @@ const DashboardPage = () => {
         setNewSkillDesc("");
         setNewSkillBody("");
         setShowSkillForm(false);
-        setFeedbackMsg(`Skill "${created.name}" saved.`);
-        setTimeout(() => setFeedbackMsg(null), 3000);
+        notify(`Skill "${created.name}" created`);
       } catch (error) {
-        setFeedbackMsg(
+        notify(
           `Create failed: ${error instanceof Error ? error.message : String(error)}`
         );
       }
     });
   };
 
+  const handleDeleteSkill = (name: string) => {
+    if (!confirm(`Delete skill "${name}"?`)) {
+      return;
+    }
+    startTransition(async () => {
+      try {
+        await deleteSkillFn({ data: { name } });
+        setSkills((prev) => prev.filter((s) => s.name !== name));
+        notify(`Skill "${name}" deleted`);
+      } catch (error) {
+        notify(
+          `Delete failed: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    });
+  };
+
+  const handleProviderChange = (p: AIProvider) => {
+    setSettings((prev) => ({ ...prev, ai_provider: p }));
+    const match = availableModels.find((m) =>
+      m.id.toLowerCase().includes(p.toLowerCase())
+    );
+    if (match) {
+      setSettings((prev) => ({ ...prev, ai_model: match.id }));
+    }
+  };
+
+  const handlePresetSelect = (preset: {
+    baseUrl: string;
+    model: string;
+    provider: AIProvider;
+  }) => {
+    setSettings((prev) => ({
+      ...prev,
+      ai_base_url: preset.baseUrl,
+      ai_model: preset.model,
+      ai_provider: preset.provider,
+    }));
+    notify(`Loaded preset: ${preset.model}`);
+  };
+
   const paletteCommands: PaletteCommand[] = [
-    ...NAV_SECTIONS.map((s) => ({
+    {
+      action: () => setActiveNav("gateway"),
       group: "Navigation",
-      hint: "↗",
-      icon: NAV_ICON[s.id],
-      id: s.id,
-      keywords: s.keywords,
-      label: `Go to ${s.label}`,
-      run: () => setActiveNav(s.id),
-    })),
+      hint: "navigate",
+      id: "nav-gateway",
+      label: "Go to Gateway",
+    },
     {
+      action: () => setActiveNav("ai_runtime"),
+      group: "Navigation",
+      hint: "navigate",
+      id: "nav-ai",
+      label: "Go to AI Gateway",
+    },
+    {
+      action: () => setActiveNav("tools"),
+      group: "Navigation",
+      hint: "navigate",
+      id: "nav-tools",
+      label: "Go to Tools",
+    },
+    {
+      action: () => setActiveNav("skills"),
+      group: "Navigation",
+      hint: "navigate",
+      id: "nav-skills",
+      label: "Go to Skills",
+    },
+    {
+      action: () => setActiveNav("audit"),
+      group: "Navigation",
+      hint: "navigate",
+      id: "nav-audit",
+      label: "Go to Audit",
+    },
+    {
+      action: handleSaveSettings,
       group: "Actions",
-      hint: "⌘ config",
+      hint: "save",
       icon: <FloppyDisk />,
-      id: "save",
-      keywords: "save settings config",
-      label: "Save configuration",
-      run: handleSaveSettings,
+      id: "act-save",
+      label: "Save Settings",
     },
     {
+      action: handleRestartBot,
       group: "Actions",
-      hint: "daemon",
+      hint: "restart",
       icon: <ArrowCounterClockwise />,
-      id: "restart",
-      keywords: "restart reload bot daemon",
-      label: "Reload bot daemon",
-      run: handleRestartBot,
+      id: "act-restart",
+      label: "Restart Bot",
     },
-    {
-      group: "Actions",
-      hint: "/models",
-      icon: <ArrowsClockwise />,
-      id: "sync",
-      keywords: "fetch sync model list",
-      label: "Sync model list",
-      run: () => {
-        loadModels();
-      },
-    },
-    {
-      group: "Actions",
-      icon: <SidebarSimple />,
-      id: "collapse",
-      keywords: "sidebar collapse expand menu",
-      label: collapsed ? "Expand sidebar" : "Collapse sidebar",
-      run: () => setCollapsed((v) => !v),
-    },
-    ...AVAILABLE_TOOLS.map((t) => ({
-      group: "Tools",
-      hint: settings.tools_enabled?.includes(t.id) ? "on" : "off",
-      icon: <Wrench />,
-      id: `tool-${t.id}`,
-      keywords: `${t.name} ${t.description}`,
-      label: `Toggle tool ${t.name}`,
-      run: () => handleToggleTool(t.id),
-    })),
   ];
 
   const visual = getStatusVisual(state.status);
@@ -861,32 +832,32 @@ const DashboardPage = () => {
         toolsCount={settings.tools_enabled?.length || 0}
       />
 
-      <main className="flex-1 overflow-y-auto p-4 sm:p-5 lg:p-6">
-        <div className="mx-auto max-w-4xl space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] pb-4">
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-[15px] font-semibold tracking-tight text-zinc-100">
+      <main className="flex-1 overflow-y-auto p-5 sm:p-6 lg:p-8">
+        <div className="mx-auto max-w-5xl space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-5">
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-bold tracking-tight text-foreground">
                 {NAV_SECTIONS.find((s) => s.id === activeNav)?.label}
               </h1>
-              <span className="flex items-center gap-1.5 rounded-sm border border-white/[0.07] bg-white/[0.02] px-2 py-1 font-mono text-[10px] text-zinc-400">
+              <span className="flex items-center gap-1.5 rounded-full border border-border bg-secondary/60 px-3 py-1 font-mono text-xs text-foreground">
                 <span
-                  className={`h-1.5 w-1.5 rounded-full ${visual.dot} ${state.status === "connecting" || state.status === "qr_ready" ? "animate-pulse" : ""}`}
+                  className={`h-2 w-2 rounded-full ${visual.dot} ${state.status === "connecting" || state.status === "qr_ready" ? "animate-pulse" : ""}`}
                 />
                 {visual.label}
               </span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <Button
                 disabled={isPending}
                 onClick={handleRestartBot}
                 variant="outline"
               >
-                <ArrowCounterClockwise />
+                <ArrowCounterClockwise className="h-3.5 w-3.5" />
                 Reload
               </Button>
               <Button disabled={isPending} onClick={handleSaveSettings}>
-                <FloppyDisk />
-                Save
+                <FloppyDisk className="h-3.5 w-3.5" />
+                Save Changes
               </Button>
             </div>
           </div>
@@ -942,7 +913,7 @@ const DashboardPage = () => {
       <CommandPalette commands={paletteCommands} />
 
       {feedbackMsg && (
-        <div className="animate-fade-in fixed right-3 bottom-3 z-40 rounded-sm border border-white/10 bg-[#0b0b0e] px-3 py-2 font-mono text-[11px] text-zinc-200 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.8)]">
+        <div className="animate-fade-in fixed right-4 bottom-4 z-40 rounded-full border border-border bg-card px-4 py-2 text-xs font-medium text-foreground shadow-xl">
           {feedbackMsg}
         </div>
       )}
@@ -951,12 +922,12 @@ const DashboardPage = () => {
 };
 
 export const Route = createFileRoute("/")({
- loader: async (): Promise<DashboardData> => {
- try {
- return await fetchDashboardData();
- } catch {
- throw redirect({ to: "/login" });
- }
- },
- component: DashboardPage,
+  loader: async (): Promise<DashboardData> => {
+    try {
+      return await fetchDashboardData();
+    } catch {
+      throw redirect({ to: "/login" });
+    }
+  },
+  component: DashboardPage,
 });

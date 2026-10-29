@@ -62,132 +62,152 @@ const ModelBrowser = ({
   model: string;
   onSelectModel: (id: string) => void;
 }) => {
-  const [activeId, setActiveId] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [vendor, setVendor] = useState<string | null>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleOutside = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
-  }, []);
-
-  const facets = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const m of availableModels) {
-      const v = vendorOf(m);
-      counts.set(v, (counts.get(v) ?? 0) + 1);
+    if (isOpen) {
+      document.addEventListener("mousedown", handleOutside);
+      return () => document.removeEventListener("mousedown", handleOutside);
     }
-    return [...counts.entries()].toSorted((a, b) => b[1] - a[1]).slice(0, 7);
+  }, [isOpen]);
+
+  const vendors = useMemo(() => {
+    const set = new Set<string>();
+    for (const m of availableModels) {
+      set.add(vendorOf(m));
+    }
+    return Array.from(set).sort();
   }, [availableModels]);
 
-  const groups = useMemo(() => {
-    const tokens = query.toLowerCase().split(/\s+/u).filter(Boolean);
-    const matched = availableModels.filter((m) => {
-      if (vendor && vendorOf(m) !== vendor) {
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return availableModels.filter((m) => {
+      const matchVendor = vendor === null || vendorOf(m) === vendor;
+      if (!matchVendor) {
         return false;
       }
-      const hay = `${m.id} ${m.name ?? ""} ${m.owned_by ?? ""}`.toLowerCase();
-      return tokens.every((t) => hay.includes(t));
-    });
-    const map = new Map<string, ModelOption[]>();
-    for (const m of matched) {
-      const v = vendorOf(m);
-      const list = map.get(v);
-      if (list) {
-        list.push(m);
-      } else {
-        map.set(v, [m]);
+      if (!q) {
+        return true;
       }
-    }
-    return [...map.entries()].toSorted((a, b) => b[1].length - a[1].length);
+      return (
+        m.id.toLowerCase().includes(q) ||
+        (m.name && m.name.toLowerCase().includes(q)) ||
+        (m.description && m.description.toLowerCase().includes(q))
+      );
+    });
   }, [availableModels, query, vendor]);
 
-  const ordered = useMemo(() => groups.flatMap(([, list]) => list), [groups]);
-
-  const active = ordered.some((m) => m.id === activeId)
-    ? activeId
-    : (ordered[0]?.id ?? null);
-
-  useEffect(() => {
-    if (!isOpen || !active) {
-      return;
+  const grouped = useMemo(() => {
+    const map = new Map<string, ModelOption[]>();
+    for (const m of filtered) {
+      const v = vendorOf(m);
+      const list = map.get(v) || [];
+      list.push(m);
+      map.set(v, list);
     }
-    const el = panelRef.current?.querySelector(
-      `[data-model="${CSS.escape(active)}"]`
-    );
-    el?.scrollIntoView({ block: "nearest" });
-  }, [active, isOpen]);
+    return map;
+  }, [filtered]);
 
-  const pick = (id: string) => {
-    onSelectModel(id);
+  const ordered = useMemo(() => {
+    const out: ModelOption[] = [];
+    for (const list of grouped.values()) {
+      for (const m of list) {
+        out.push(m);
+      }
+    }
+    return out;
+  }, [grouped]);
+
+  const active = ordered[activeIdx];
+
+  const pick = (m: ModelOption) => {
+    onSelectModel(m.id);
     setIsOpen(false);
   };
 
   const move = (delta: number) => {
-    if (ordered.length === 0) {
-      return;
-    }
-    const idx = ordered.findIndex((m) => m.id === active);
-    const next = Math.min(ordered.length - 1, Math.max(0, idx + delta));
-    setActiveId(ordered[next]?.id ?? null);
+    setActiveIdx((prev) => {
+      const next = prev + delta;
+      if (next < 0) {
+        return 0;
+      }
+      if (next >= ordered.length) {
+        return Math.max(0, ordered.length - 1);
+      }
+      return next;
+    });
   };
 
   return (
-    <div className="relative" ref={panelRef}>
-      <div className="mb-1.5 flex items-center justify-between">
-        <Label htmlFor="model_browser_trigger">Active model</Label>
+    <div className="relative" ref={containerRef}>
+      <div className="mb-2 flex items-center justify-between">
+        <label
+          className="text-xs font-semibold text-foreground"
+          htmlFor="model_browser_trigger"
+        >
+          Model Selection
+        </label>
         <button
-          className="font-mono text-[10px] text-zinc-600 transition-colors hover:text-zinc-300"
+          className="font-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground"
           onClick={() => setIsOpen((v) => !v)}
           type="button"
         >
-          {isOpen ? "close" : "browse models"}
+          {isOpen ? "close" : "browse catalog"}
         </button>
       </div>
 
       <button
-        className="flex w-full cursor-pointer items-center gap-2.5 rounded-sm border border-white/10 bg-white/[0.03] px-2.5 py-2 text-left transition-colors hover:border-white/20"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-input bg-card px-3.5 py-2.5 text-left transition-colors hover:border-primary/50"
         id="model_browser_trigger"
         onClick={() => setIsOpen((v) => !v)}
         type="button"
       >
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-xs border border-white/[0.08] bg-white/[0.03] text-zinc-400">
-          <Brain className="h-3.5 w-3.5" />
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">
+          <Brain className="h-4 w-4" />
         </span>
-        <span className="min-w-0 flex-1 truncate font-mono text-xs text-zinc-100">
+        <span className="min-w-0 flex-1 truncate font-mono text-xs text-foreground font-medium">
           {model || "no model selected"}
         </span>
         {availableModels.length > 0 && (
-          <span className="shrink-0 font-mono text-[10px] text-zinc-500 tabular-nums">
-            {availableModels.length}
+          <span className="shrink-0 rounded-full border border-border bg-secondary/80 px-2.5 py-0.5 font-mono text-[10px] text-muted-foreground tabular-nums">
+            {availableModels.length} models
           </span>
         )}
         <CaretDown
-          className={`h-3.5 w-3.5 shrink-0 text-zinc-500 transition-transform ${
+          className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
         />
       </button>
 
       {error && !isOpen && (
-        <p className="mt-1.5 font-mono text-[10px] text-rose-300">{error}</p>
+        <p className="mt-1.5 font-mono text-xs text-destructive">{error}</p>
       )}
 
       {isOpen && (
-        <div className="animate-fade-in absolute top-full right-0 left-0 z-40 mt-1.5 overflow-hidden rounded-md border border-white/10 bg-[#0b0b0e] shadow-[0_24px_60px_-12px_rgba(0,0,0,0.85)]">
-          <div className="flex items-center gap-2 border-b border-white/[0.07] px-3">
-            <MagnifyingGlass className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
+        <div className="animate-fade-in absolute top-full right-0 left-0 z-40 mt-2 overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+          <div className="flex items-center gap-2.5 border-b border-border px-4 py-2.5">
+            <MagnifyingGlass className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input
               aria-label="Search models"
               autoFocus
-              className="h-9 w-full bg-transparent font-mono text-xs text-zinc-100 outline-none placeholder:text-zinc-600"
+              className="h-8 w-full bg-transparent text-xs text-foreground outline-none placeholder:text-muted-foreground"
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Escape") {
@@ -206,108 +226,110 @@ const ModelBrowser = ({
                   pick(active);
                 }
               }}
-              placeholder="Filter id / vendor..."
+              placeholder="Filter id or vendor..."
               value={query}
             />
           </div>
 
-          <div className="flex gap-1 overflow-x-auto border-b border-white/[0.07] px-2 py-1.5">
+          <div className="flex gap-1.5 overflow-x-auto border-b border-border px-3 py-2">
             <button
-              className={`shrink-0 rounded-sm px-2 py-1 font-mono text-[10px] transition-colors ${
+              className={`shrink-0 rounded-full px-3 py-1 font-mono text-[10px] transition-colors ${
                 vendor === null
-                  ? "bg-white/10 text-zinc-100"
-                  : "text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-200"
+                  ? "bg-primary text-primary-foreground font-medium"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
               }`}
               onClick={() => setVendor(null)}
               type="button"
             >
-              all · {availableModels.length}
+              all
             </button>
-            {facets.map(([v, count]) => (
+            {vendors.map((v) => (
               <button
-                className={`shrink-0 rounded-sm px-2 py-1 font-mono text-[10px] transition-colors ${
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[10px] transition-colors ${
                   vendor === v
-                    ? "bg-white/10 text-zinc-100"
-                    : "text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-200"
+                    ? "bg-primary text-primary-foreground font-medium"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
                 }`}
                 key={v}
                 onClick={() => setVendor(v)}
                 type="button"
               >
-                {v} · {count}
+                {vendorGlyph(v)}
+                {v}
               </button>
             ))}
           </div>
 
-          <div className="max-h-[280px] overflow-y-auto py-1">
+          <div className="max-h-72 overflow-y-auto p-1.5" ref={listRef}>
             {isFetching && (
-              <div className="flex items-center gap-2 px-3 py-6 font-mono text-[11px] text-zinc-500">
-                <ArrowsClockwise className="h-3.5 w-3.5 animate-spin" />
-                fetching /models...
+              <div className="flex items-center gap-2.5 px-4 py-8 font-mono text-xs text-muted-foreground">
+                <ArrowsClockwise className="h-4 w-4 animate-spin text-primary" />
+                syncing model catalog...
               </div>
             )}
-            {!isFetching && error && (
-              <p className="px-3 py-4 font-mono text-[11px] text-rose-300">
-                {error} — check Base URL / API Key, then click Sync.
+            {error && (
+              <p className="px-4 py-6 font-mono text-xs text-destructive">
+                {error}
               </p>
             )}
             {!isFetching && !error && ordered.length === 0 && (
-              <p className="px-3 py-6 text-center font-mono text-[11px] text-zinc-600">
-                No models match.
+              <p className="px-4 py-8 text-center text-xs text-muted-foreground">
+                No models match your query.
               </p>
             )}
-            {!isFetching &&
-              groups.map(([v, list]) => (
-                <div key={v}>
-                  <p className="sticky top-0 z-10 flex items-center gap-1.5 bg-[#0b0b0e] px-3 pt-1.5 pb-1 font-mono text-[9.5px] tracking-[0.08em] text-zinc-600 uppercase">
-                    {vendorGlyph(v)}
-                    {v}
-                    <span className="tabular-nums">· {list.length}</span>
-                  </p>
+
+            {Array.from(grouped.entries()).map(([v, list]) => (
+              <div key={v}>
+                <p className="sticky top-0 z-10 flex items-center gap-2 bg-card px-3 pt-2 pb-1 font-mono text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                  {vendorGlyph(v)}
+                  {v}
+                  <span className="tabular-nums">· {list.length}</span>
+                </p>
+                <div className="space-y-0.5">
                   {list.map((m) => {
-                    const isSelected = model === m.id;
-                    const isActive = active === m.id;
+                    const isSelected = m.id === model;
+                    const isActive = active?.id === m.id;
                     return (
                       <button
-                        className={`flex w-full items-center gap-2 rounded-xs px-3 py-1.5 text-left transition-colors ${
-                          isActive ? "bg-white/[0.07]" : "hover:bg-white/[0.04]"
+                        className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-colors ${
+                          isSelected
+                            ? "bg-primary/10 text-primary font-medium"
+                            : isActive
+                              ? "bg-secondary text-foreground"
+                              : "text-foreground hover:bg-secondary/60"
                         }`}
-                        data-model={m.id}
                         key={m.id}
-                        onClick={() => pick(m.id)}
-                        onMouseEnter={() => setActiveId(m.id)}
+                        onClick={() => pick(m)}
                         type="button"
                       >
-                        <span
-                          className={`min-w-0 flex-1 truncate font-mono text-[11px] ${
-                            isSelected ? "text-zinc-100" : "text-zinc-300"
-                          }`}
-                        >
+                        <span className="min-w-0 flex-1 truncate font-mono text-xs">
                           {m.id}
                         </span>
                         {m.context_length ? (
-                          <span className="shrink-0 rounded-xs border border-white/[0.07] px-1.5 py-0.5 font-mono text-[9px] text-zinc-500 tabular-nums">
+                          <span className="shrink-0 rounded-full border border-border bg-secondary/80 px-2 py-0.5 font-mono text-[10px] text-muted-foreground tabular-nums">
                             {Math.round(m.context_length / 1000)}k ctx
                           </span>
                         ) : null}
                         {isSelected && (
-                          <Check className="h-3.5 w-3.5 shrink-0 text-zinc-100" />
+                          <Check className="h-4 w-4 shrink-0 text-primary" />
                         )}
                       </button>
                     );
                   })}
                 </div>
-              ))}
+              </div>
+            ))}
           </div>
 
-          <div className="flex items-center justify-between border-t border-white/[0.07] px-3 py-1.5">
-            <span className="font-mono text-[10px] text-zinc-600 tabular-nums">
-              {ordered.length} / {availableModels.length} model
+          <div className="flex items-center justify-between border-t border-border px-4 py-2">
+            <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
+              {ordered.length} / {availableModels.length} models
             </span>
-            <span className="flex items-center gap-1.5">
-              <span className="kbd">↑↓</span>
+            <span className="flex items-center gap-2">
               <span className="kbd">↵</span>
+              <span className="text-[10px] text-muted-foreground">select</span>
               <span className="kbd">esc</span>
+              <span className="text-[10px] text-muted-foreground">close</span>
             </span>
           </div>
         </div>
@@ -325,20 +347,19 @@ const Segmented = <T extends string>({
   options: { icon?: ReactNode; label: string; value: T }[];
   value: T;
 }) => (
-  <div className="flex flex-wrap gap-1">
+  <div className="flex flex-wrap gap-1.5">
     {options.map((o) => (
       <button
-        aria-pressed={o.value === value}
-        className={`flex items-center gap-1.5 rounded-sm border px-2.5 py-1.5 font-mono text-[10px] transition-colors ${
+        className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
           o.value === value
-            ? "border-white/20 bg-white/[0.08] text-zinc-100"
-            : "border-white/[0.07] bg-white/[0.02] text-zinc-500 hover:border-white/15 hover:text-zinc-200"
+            ? "bg-primary text-primary-foreground shadow-sm"
+            : "border border-border bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
         }`}
         key={o.value}
         onClick={() => onChange(o.value)}
         type="button"
       >
-        {o.icon && <span className="[&_svg]:h-3 [&_svg]:w-3">{o.icon}</span>}
+        {o.icon}
         {o.label}
       </button>
     ))}
@@ -359,26 +380,26 @@ export const AiRuntimeSection = ({
   isFetchingModels: boolean;
   modelsFetchError: string | null;
   onFetchModels: () => void;
-  onPresetSelect: (id: string) => void;
+  onPresetSelect: (preset: {
+    baseUrl: string;
+    model: string;
+    provider: AIProvider;
+  }) => void;
   onProviderChange: (p: AIProvider) => void;
   setSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
   settings: AppSettings;
 }) => (
-  <div className="space-y-4">
+  <div className="space-y-5">
     <Card>
-      <CardHeader className="flex-row items-center justify-between border-b border-white/[0.07]">
-        <div className="flex items-center gap-2">
-          <Sparkle className="h-4 w-4 text-zinc-500" />
+      <CardHeader className="flex-row items-center justify-between border-b border-border px-5 py-4">
+        <div className="flex items-center gap-2.5">
+          <Sparkle className="h-4 w-4 text-primary" />
           <div>
-            <h2 className="text-[13px] font-semibold tracking-tight text-zinc-100">
-              Model &amp; Routing
+            <h2 className="text-sm font-semibold tracking-tight text-foreground">
+              Model & Routing
             </h2>
-            <p className="mt-0.5 text-[11px] text-zinc-500">
-              Model inventory synced from the endpoint{" "}
-              <code className="rounded-xs bg-white/[0.06] px-1 py-0.5 font-mono text-[10px] text-zinc-300">
-                /models
-              </code>{" "}
-              upstream.
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Dynamic model inventory from upstream endpoint.
             </p>
           </div>
         </div>
@@ -389,10 +410,10 @@ export const AiRuntimeSection = ({
           variant="outline"
         >
           <ArrowsClockwise className={isFetchingModels ? "animate-spin" : ""} />
-          Sync
+          Sync Models
         </Button>
       </CardHeader>
-      <CardContent className="space-y-4 pt-4">
+      <CardContent className="space-y-5 p-5">
         <ModelBrowser
           availableModels={availableModels}
           error={modelsFetchError}
@@ -404,28 +425,28 @@ export const AiRuntimeSection = ({
         />
 
         <div>
-          <p className="mb-1.5 font-mono text-[9.5px] tracking-[0.08em] text-zinc-600 uppercase">
-            preset
+          <p className="mb-2 font-mono text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+            Recommended Presets
           </p>
-          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {AI_MODEL_PRESETS.slice(0, 4).map((preset) => {
-              const isSelected = settings.ai_model === preset.id;
+              const isSelected = settings.ai_model === preset.model;
               return (
                 <button
-                  className={`flex flex-col rounded-sm border px-2.5 py-2 text-left transition-colors ${
+                  className={`flex flex-col rounded-xl border p-3 text-left transition-all ${
                     isSelected
-                      ? "border-white/20 bg-white/[0.06]"
-                      : "border-white/[0.07] bg-white/[0.02] hover:border-white/15"
+                      ? "border-primary bg-primary/10 text-primary shadow-sm"
+                      : "border-border bg-card hover:border-primary/40 hover:bg-secondary/40"
                   }`}
                   key={preset.id}
-                  onClick={() => onPresetSelect(preset.id)}
+                  onClick={() => onPresetSelect(preset)}
                   type="button"
                 >
-                  <span className="truncate text-[11px] font-medium text-zinc-200">
+                  <span className="font-mono text-xs font-semibold text-foreground">
                     {preset.name}
                   </span>
-                  <span className="mt-0.5 truncate font-mono text-[9.5px] text-zinc-600">
-                    {preset.provider}
+                  <span className="mt-1 line-clamp-1 font-mono text-[10px] text-muted-foreground">
+                    {preset.model}
                   </span>
                 </button>
               );
@@ -436,19 +457,17 @@ export const AiRuntimeSection = ({
     </Card>
 
     <Card>
-      <CardHeader className="border-b border-white/[0.07]">
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-zinc-500" />
-          <h2 className="text-[13px] font-semibold tracking-tight text-zinc-100">
-            Endpoint &amp; Parameter
+      <CardHeader className="border-b border-border px-5 py-4">
+        <div className="flex items-center gap-2.5">
+          <SlidersHorizontal className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-semibold tracking-tight text-foreground">
+            Endpoint & Parameters
           </h2>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4 pt-4">
-        <div className="space-y-1.5">
-          <p className="text-[11px] leading-none font-medium text-zinc-400">
-            Provider
-          </p>
+      <CardContent className="space-y-5 p-5">
+        <div className="space-y-2">
+          <Label>AI Provider</Label>
           <Segmented
             onChange={onProviderChange}
             options={[
@@ -458,12 +477,12 @@ export const AiRuntimeSection = ({
                 value: "openrouter" as AIProvider,
               },
               {
-                icon: <Sparkle />,
+                icon: <Sparkle className="h-3 w-3" />,
                 label: "openai",
                 value: "openai" as AIProvider,
               },
               {
-                icon: <Lightning />,
+                icon: <Lightning className="h-3 w-3" />,
                 label: "groq",
                 value: "groq" as AIProvider,
               },
@@ -473,7 +492,7 @@ export const AiRuntimeSection = ({
                 value: "ollama" as AIProvider,
               },
               {
-                icon: <Plugs />,
+                icon: <Plugs className="h-3 w-3" />,
                 label: "custom",
                 value: "custom" as AIProvider,
               },
@@ -486,7 +505,7 @@ export const AiRuntimeSection = ({
           <div className="space-y-1.5">
             <Label htmlFor="base_url">Base URL</Label>
             <Input
-              className="font-mono text-[11px]"
+              className="font-mono text-xs"
               id="base_url"
               onChange={(e) =>
                 setSettings((prev) => ({
@@ -503,7 +522,7 @@ export const AiRuntimeSection = ({
               API Key
             </Label>
             <Input
-              className="font-mono text-[11px]"
+              className="font-mono text-xs"
               id="api_key"
               onChange={(e) =>
                 setSettings((prev) => ({
@@ -517,9 +536,9 @@ export const AiRuntimeSection = ({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="model_id">Model ID (manual override)</Label>
+            <Label htmlFor="model_id">Model ID (Manual Override)</Label>
             <Input
-              className="font-mono text-[11px]"
+              className="font-mono text-xs"
               id="model_id"
               onChange={(e) =>
                 setSettings((prev) => ({
@@ -531,9 +550,9 @@ export const AiRuntimeSection = ({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="max_tokens">Max output tokens</Label>
+            <Label htmlFor="max_tokens">Max Output Tokens</Label>
             <Input
-              className="font-mono text-[11px]"
+              className="font-mono text-xs"
               id="max_tokens"
               onChange={(e) =>
                 setSettings((prev) => ({
@@ -547,11 +566,9 @@ export const AiRuntimeSection = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 border-t border-white/[0.07] pt-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <p className="text-[11px] leading-none font-medium text-zinc-400">
-              Reasoning effort
-            </p>
+        <div className="grid grid-cols-1 gap-4 border-t border-border pt-5 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Reasoning Effort</Label>
             <Segmented
               onChange={(v) =>
                 setSettings((prev) => ({
@@ -569,26 +586,22 @@ export const AiRuntimeSection = ({
             />
           </div>
           <div className="space-y-1.5">
-            <p className="text-[11px] leading-none font-medium text-zinc-400">
-              Group access
-            </p>
-            <p className="text-[10px] leading-relaxed text-zinc-600">
-              Groups and DMs are both restricted: only JIDs listed in the
-              Gateway panel allowlist are served. In an allowed group the bot
-              answers only when mentioned or its message is quoted.
+            <Label>Access Boundary</Label>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Bot operates only in authorized groups and DMs listed in the Gateway panel. In groups, bot requires explicit mention or quote.
             </p>
           </div>
         </div>
 
-        <div className="space-y-1.5 border-t border-white/[0.07] pt-4">
+        <div className="space-y-2 border-t border-border pt-5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="system_prompt">System persona prompt</Label>
-            <span className="font-mono text-[10px] text-zinc-600 tabular-nums">
+            <Label htmlFor="system_prompt">System Persona Prompt</Label>
+            <span className="font-mono text-xs text-muted-foreground tabular-nums">
               {settings.ai_system_prompt.length} chars
             </span>
           </div>
           <Textarea
-            className="font-mono text-[11px]"
+            className="font-mono text-xs"
             id="system_prompt"
             onChange={(e) =>
               setSettings((prev) => ({
@@ -596,7 +609,7 @@ export const AiRuntimeSection = ({
                 ai_system_prompt: e.target.value,
               }))
             }
-            rows={4}
+            rows={5}
             value={settings.ai_system_prompt}
           />
         </div>

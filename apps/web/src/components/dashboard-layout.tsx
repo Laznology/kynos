@@ -109,15 +109,15 @@ export const SidebarNav = ({
 
   return (
     <>
-      <div className="flex w-full items-center gap-1 overflow-x-auto border-b border-white/[0.07] bg-[#08080a] p-1.5 md:hidden">
+      <div className="flex w-full items-center gap-1.5 overflow-x-auto border-b border-border bg-card p-2 md:hidden">
         {items.map((item) => {
           const isActive = activeNav === item.id;
           return (
             <button
-              className={`flex shrink-0 items-center gap-1.5 rounded-sm border px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
+              className={`flex shrink-0 items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
                 isActive
-                  ? "border-white/20 bg-white/10 text-white"
-                  : "border-transparent text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-200"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground"
               }`}
               key={item.id}
               onClick={() => onSelectNav(item.id)}
@@ -131,19 +131,19 @@ export const SidebarNav = ({
       </div>
 
       <aside
-        className={`hidden shrink-0 flex-col justify-between border-r border-white/[0.07] bg-[#08080a] transition-[width] duration-150 ease-out md:flex ${
-          collapsed ? "w-14" : "w-60"
+        className={`hidden shrink-0 flex-col justify-between border-r border-border bg-card transition-[width] duration-150 ease-out md:flex ${
+          collapsed ? "w-16" : "w-64"
         }`}
       >
-        <div className="flex-1 p-2">
+        <div className="flex-1 p-3">
           <div
-            className={`mb-2 flex items-center ${
+            className={`mb-3 flex items-center ${
               collapsed ? "justify-center" : "justify-between px-1"
             }`}
           >
             <div
-              className={`flex items-center gap-2 overflow-hidden rounded-sm border border-white/[0.07] bg-white/[0.02] ${
-                collapsed ? "h-7 w-7 justify-center p-0" : "px-2.5 py-1.5"
+              className={`flex items-center gap-2 overflow-hidden rounded-full border border-border bg-secondary/60 ${
+                collapsed ? "h-8 w-8 justify-center p-0" : "px-3 py-1"
               }`}
               title={`${statusLabel} · WhatsApp gateway`}
             >
@@ -151,14 +151,14 @@ export const SidebarNav = ({
                 <span className={`h-2 w-2 rounded-full ${dotColor}`} />
               </span>
               {!collapsed && (
-                <span className="truncate font-mono text-[10px] font-medium text-zinc-300">
+                <span className="truncate font-mono text-[11px] font-medium text-foreground">
                   {statusLabel}
                 </span>
               )}
             </div>
             <button
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-transparent text-zinc-600 transition-colors hover:border-white/10 hover:bg-white/[0.04] hover:text-zinc-200"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               onClick={onToggleCollapsed}
               type="button"
             >
@@ -170,66 +170,62 @@ export const SidebarNav = ({
             </button>
           </div>
 
-          <nav className="space-y-0.5">
+          <nav className="space-y-1">
             {items.map((item) => {
               const isActive = activeNav === item.id;
               return (
                 <button
-                  className={`group relative flex w-full items-center gap-2.5 rounded-sm px-2 py-1.5 text-left transition-colors ${
+                  className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs font-medium transition-all ${
                     isActive
-                      ? "bg-white/[0.06] text-zinc-100"
-                      : "text-zinc-500 hover:bg-white/[0.03] hover:text-zinc-200"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                   } ${collapsed ? "justify-center px-0" : ""}`}
                   key={item.id}
                   onClick={() => onSelectNav(item.id)}
                   title={collapsed ? item.label : undefined}
                   type="button"
                 >
-                  {isActive && (
-                    <span className="absolute top-1 bottom-1 left-0 w-0.5 bg-zinc-100" />
-                  )}
                   <span
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-sm border transition-colors [&_svg]:h-3.5 [&_svg]:w-3.5 ${
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors [&_svg]:h-4 [&_svg]:w-4 ${
                       isActive
-                        ? "border-white/15 bg-white/[0.07] text-zinc-100"
-                        : "border-white/[0.06] bg-white/[0.02] text-zinc-500 group-hover:text-zinc-300"
+                        ? "text-primary-foreground"
+                        : "bg-secondary text-muted-foreground group-hover:text-foreground"
                     }`}
                   >
                     {item.icon}
-                    {item.dot && collapsed && (
-                      <span
-                        className={`absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full ${dotColor}`}
-                      />
-                    )}
                   </span>
                   {!collapsed && (
-                    <span className="truncate text-xs font-medium">
-                      {item.label}
-                    </span>
+                    <>
+                      <span className="truncate">{item.label}</span>
+                      {item.badge !== undefined && item.badge !== "" && (
+                        <span
+                          className={`ml-auto max-w-[80px] shrink-0 truncate rounded-full px-2 py-0.5 font-mono text-[10px] ${
+                            isActive
+                              ? "bg-white/20 text-white"
+                              : "border border-border bg-secondary/80 text-muted-foreground"
+                          }`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                    </>
                   )}
-                  {!collapsed &&
-                    item.badge !== undefined &&
-                    item.badge !== "" && (
-                      <span className="ml-auto max-w-[80px] shrink-0 truncate rounded-xs border border-white/[0.07] bg-white/[0.03] px-1.5 py-0.5 font-mono text-[9.5px] text-zinc-500">
-                        {item.badge}
-                      </span>
-                    )}
                 </button>
               );
             })}
           </nav>
         </div>
 
-        <div className="border-t border-white/[0.07] p-2">
+        <div className="border-t border-border p-3">
           <div
-            className={`flex items-center gap-2 rounded-sm border border-white/[0.07] bg-white/[0.02] text-zinc-400 ${
-              collapsed ? "h-8 justify-center" : "px-2 py-1.5"
+            className={`flex items-center gap-2 rounded-xl border border-border bg-secondary/50 text-muted-foreground ${
+              collapsed ? "h-9 justify-center" : "px-3 py-2"
             }`}
             title={model ? `${provider} · ${model}` : "No active model"}
           >
             {providerGlyph(provider)}
             {!collapsed && (
-              <span className="truncate font-mono text-[10px] text-zinc-300">
+              <span className="truncate font-mono text-[11px] text-foreground">
                 {model || "no model"}
               </span>
             )}
@@ -246,16 +242,16 @@ const LEVEL_VARIANT: Record<string, "destructive" | "secondary" | "warning"> = {
 };
 
 export const AuditSection = ({ logs }: { logs: AuditLog[] }) => (
-  <div className="rounded-md border border-white/[0.07] bg-[#0a0a0d]">
-    <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-3">
-      <div className="flex items-center gap-2">
-        <ArrowCounterClockwise className="h-4 w-4 text-zinc-500" />
-        <h2 className="text-[13px] font-semibold tracking-tight text-zinc-100">
+  <div className="rounded-2xl border border-border bg-card shadow-sm">
+    <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+      <div className="flex items-center gap-2.5">
+        <ArrowCounterClockwise className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-sm font-semibold tracking-tight text-foreground">
           Audit Trail
         </h2>
       </div>
-      <div className="flex items-center gap-2">
-        <span className="font-mono text-[10px] text-zinc-600">
+      <div className="flex items-center gap-2.5">
+        <span className="font-mono text-[11px] text-muted-foreground">
           refresh 3s · sqlite
         </span>
         <Badge variant="secondary">{logs.length} rows</Badge>
@@ -265,17 +261,17 @@ export const AuditSection = ({ logs }: { logs: AuditLog[] }) => (
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
-          <TableRow className="border-b border-white/[0.07] hover:bg-transparent">
-            <TableHead className="w-20 font-mono text-[9.5px] tracking-[0.08em] text-zinc-600 uppercase">
+          <TableRow className="border-b border-border hover:bg-transparent">
+            <TableHead className="w-20 font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
               Level
             </TableHead>
-            <TableHead className="w-28 font-mono text-[9.5px] tracking-[0.08em] text-zinc-600 uppercase">
+            <TableHead className="w-28 font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
               Category
             </TableHead>
-            <TableHead className="font-mono text-[9.5px] tracking-[0.08em] text-zinc-600 uppercase">
+            <TableHead className="font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
               Message
             </TableHead>
-            <TableHead className="w-28 text-right font-mono text-[9.5px] tracking-[0.08em] text-zinc-600 uppercase">
+            <TableHead className="w-28 text-right font-mono text-[10px] tracking-wider text-muted-foreground uppercase">
               Time
             </TableHead>
           </TableRow>
@@ -284,7 +280,7 @@ export const AuditSection = ({ logs }: { logs: AuditLog[] }) => (
           {logs.length === 0 ? (
             <TableRow>
               <TableCell
-                className="py-10 text-center font-mono text-[11px] text-zinc-600"
+                className="py-12 text-center font-mono text-xs text-muted-foreground"
                 colSpan={4}
               >
                 No logs recorded yet.
@@ -295,19 +291,19 @@ export const AuditSection = ({ logs }: { logs: AuditLog[] }) => (
               const variant = LEVEL_VARIANT[log.level] ?? "secondary";
               return (
                 <TableRow
-                  className="border-b border-white/[0.04] transition-colors last:border-0 hover:bg-white/[0.02]"
+                  className="border-b border-border/50 transition-colors last:border-0 hover:bg-secondary/40"
                   key={log.id}
                 >
-                  <TableCell className="py-2">
+                  <TableCell className="py-2.5">
                     <Badge variant={variant}>{log.level}</Badge>
                   </TableCell>
-                  <TableCell className="py-2 font-mono text-[10px] text-zinc-500">
+                  <TableCell className="py-2.5 font-mono text-[11px] text-muted-foreground">
                     {log.category}
                   </TableCell>
-                  <TableCell className="max-w-0 py-2 text-[11px] text-zinc-300">
+                  <TableCell className="max-w-0 py-2.5 text-xs text-foreground">
                     <span className="block truncate">{log.message}</span>
                   </TableCell>
-                  <TableCell className="py-2 text-right font-mono text-[10px] text-zinc-600 tabular-nums">
+                  <TableCell className="py-2.5 text-right font-mono text-[11px] text-muted-foreground tabular-nums">
                     {log.created_at
                       ? new Date(log.created_at).toLocaleTimeString()
                       : "-"}

@@ -21,22 +21,16 @@ export interface ModelOption {
   owned_by?: string;
 }
 
-export const fetchDashboardData = async (
- cookieHeader?: string
-): Promise<DashboardData> => {
- const url =
- typeof window === "undefined"
- ? "http://localhost:3000/api/dashboard"
- : "/api/dashboard";
- const headers: Record<string, string> = {};
- if (cookieHeader) {
- headers.cookie = cookieHeader;
- }
- const res = await fetch(url, { headers });
- if (!res.ok) {
- throw new Error(`Failed to fetch dashboard data: ${res.statusText}`);
- }
- return (await res.json()) as DashboardData;
+export const fetchDashboardData = async (): Promise<DashboardData> => {
+  const url =
+    typeof window === "undefined"
+      ? "http://localhost:3000/api/dashboard"
+      : "/api/dashboard";
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch dashboard data: ${res.statusText}`);
+  }
+  return (await res.json()) as DashboardData;
 };
 
 export const fetchAvailableModels = async (
@@ -59,14 +53,10 @@ export const fetchAvailableModels = async (
 
   const res = await fetch(url);
   if (!res.ok) {
-    const errorJson = (await res.json().catch(() => ({}))) as {
-      error?: string;
-    };
-    throw new Error(errorJson.error || `HTTP ${res.status} fetching models`);
+    throw new Error(`Failed to fetch models: ${res.statusText}`);
   }
-
-  const json = (await res.json()) as { models: ModelOption[]; ok: boolean };
-  return json.models || [];
+  const json = (await res.json()) as { data: ModelOption[]; ok: boolean };
+  return json.data || [];
 };
 
 export const saveSettingsFn = async ({
@@ -138,21 +128,21 @@ export const triggerBotRestartFn = async (): Promise<{
 };
 
 export const loginFn = async (
- password: string
+  password: string
 ): Promise<{ ok: boolean; error?: string }> => {
- const res = await fetch("/api/auth", {
- body: JSON.stringify({ action: "login", password }),
- headers: { "Content-Type": "application/json" },
- method: "POST",
- });
- return (await res.json()) as { ok: boolean; error?: string };
+  const res = await fetch("/api/auth", {
+    body: JSON.stringify({ action: "login", password }),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  });
+  return (await res.json()) as { ok: boolean; error?: string };
 };
 
 export const logoutFn = async (): Promise<{ ok: boolean }> => {
- const res = await fetch("/api/auth", {
- body: JSON.stringify({ action: "logout" }),
- headers: { "Content-Type": "application/json" },
- method: "POST",
- });
- return (await res.json()) as { ok: boolean };
+  const res = await fetch("/api/auth", {
+    body: JSON.stringify({ action: "logout" }),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  });
+  return (await res.json()) as { ok: boolean };
 };

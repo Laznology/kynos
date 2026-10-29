@@ -8,7 +8,7 @@ export const Input = ({ className, type = "text", ...props }: InputProps) => (
   <input
     type={type}
     className={cn(
-      "flex h-8 w-full rounded-sm border border-white/10 bg-white/[0.03] px-2.5 text-xs text-zinc-100 transition-colors file:border-0 file:bg-transparent file:text-xs file:font-medium placeholder:text-zinc-600 hover:border-white/[0.16] focus-visible:border-white/25 focus-visible:ring-1 focus-visible:ring-zinc-400/40 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40",
+      "flex h-8 w-full rounded-lg border border-input bg-card/60 px-3 text-xs text-foreground transition-colors file:border-0 file:bg-transparent file:text-xs file:font-medium placeholder:text-muted-foreground hover:border-input/80 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40",
       className
     )}
     {...props}

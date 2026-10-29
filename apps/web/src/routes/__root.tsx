@@ -10,7 +10,7 @@ const RootDocument = ({ children }: { children: React.ReactNode }) => (
     <head>
       <HeadContent />
     </head>
-    <body className="flex h-screen flex-col overflow-hidden bg-[#050505] text-zinc-200 antialiased">
+    <body className="flex h-screen flex-col overflow-hidden bg-background text-foreground antialiased selection:bg-primary selection:text-white">
       <Header />
       <div className="flex min-h-0 flex-1 overflow-hidden">{children}</div>
       <Footer />
@@ -30,7 +30,7 @@ export const Route = createRootRoute({
         rel: "preconnect",
       },
       {
-        href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
         rel: "stylesheet",
       },
     ],

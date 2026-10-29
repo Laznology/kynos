@@ -1,5 +1,5 @@
 import { LockKey, SignIn } from "@phosphor-icons/react";
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { Button } from "../components/ui/button";
@@ -11,7 +11,6 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const router = useRouter();
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -40,15 +39,15 @@ function LoginPage() {
 
   return (
     <div className="flex h-full w-full items-center justify-center p-4">
-      <div className="w-full max-w-sm rounded-lg border border-white/10 bg-[#0c0c0e] p-6 shadow-2xl">
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl">
         <div className="mb-6 flex flex-col items-center text-center">
-          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-md border border-white/15 bg-white/[0.05] text-zinc-100">
+          <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <LockKey className="h-5 w-5" weight="fill" />
           </div>
-          <h1 className="text-base font-semibold tracking-tight text-zinc-100">
+          <h1 className="text-base font-semibold tracking-tight text-foreground">
             Kynos Console
           </h1>
-          <p className="mt-1 font-mono text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-muted-foreground">
             Akses dibatasi. Masukkan password admin.
           </p>
         </div>
@@ -61,12 +60,12 @@ function LoginPage() {
               placeholder="Admin Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-black/40 border-white/10 text-xs font-mono"
+              className="font-mono text-xs"
             />
           </div>
 
           {error && (
-            <div className="rounded border border-red-500/20 bg-red-500/10 px-2.5 py-1.5 font-mono text-[11px] text-red-400">
+            <div className="rounded-xl border border-destructive/30 bg-destructive/15 px-3 py-2 font-mono text-xs text-destructive">
               {error}
             </div>
           )}

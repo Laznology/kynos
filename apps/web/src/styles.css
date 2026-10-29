@@ -2,33 +2,132 @@
 
 @theme {
   --font-sans:
-    "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     sans-serif;
   --font-mono:
-    "IBM Plex Mono", ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+    "SF Mono", "IBM Plex Mono", Menlo, Consolas, Monaco, monospace;
 
-  --radius-xs: 0px;
-  --radius-sm: 2px;
-  --radius-md: 3px;
-  --radius-lg: 3px;
-  --radius-xl: 4px;
-  --radius-2xl: 4px;
-  --radius-3xl: 4px;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-cobalt: #0064e0;
+  --color-cobalt-deep: #0457cb;
+  --color-facebook-blue: #1876f2;
+  --color-success: #31a24c;
+  --color-warning: #f7b928;
+  --color-attention: #f2a918;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-3xl: 32px;
+  --radius-full: 9999px;
 }
 
 @layer base {
   :root {
-    --background: #050505;
-    --foreground: #f4f4f5;
-    --surface: #0a0a0d;
-    --surface-raised: #0b0b0e;
-    --hairline: rgba(255, 255, 255, 0.08);
-    --hairline-soft: rgba(255, 255, 255, 0.05);
-    --ring: rgba(255, 255, 255, 0.35);
+    --background: #ffffff;
+    --foreground: #0a1317;
+
+    --card: #ffffff;
+    --card-foreground: #0a1317;
+
+    --popover: #ffffff;
+    --popover-foreground: #0a1317;
+
+    --primary: #0064e0;
+    --primary-foreground: #ffffff;
+
+    --secondary: #f1f4f7;
+    --secondary-foreground: #1c1e21;
+
+    --muted: #f1f4f7;
+    --muted-foreground: #5d6c7b;
+
+    --accent: #e7f1ff;
+    --accent-foreground: #0064e0;
+
+    --destructive: #e41e3f;
+    --destructive-foreground: #ffffff;
+
+    --border: #dee3e9;
+    --input: #ced0d4;
+    --ring: #1876f2;
+
+    --hairline: #dee3e9;
+    --hairline-soft: #f1f4f7;
+    --surface: #ffffff;
+    --surface-raised: #f1f4f7;
+    --surface-soft: #f1f4f7;
+  }
+
+  .dark {
+    /* Meta dark mode palette: deep slate-charcoal, not harsh #000000 */
+    --background: #0a0d10;
+    --foreground: #f7f9fa;
+
+    --card: #14181d;
+    --card-foreground: #f7f9fa;
+
+    --popover: #181d24;
+    --popover-foreground: #f7f9fa;
+
+    --primary: #0064e0;
+    --primary-foreground: #ffffff;
+
+    --secondary: #1a1f26;
+    --secondary-foreground: #e4e7eb;
+
+    --muted: #181d24;
+    --muted-foreground: #9aa8b6;
+
+    --accent: rgba(0, 100, 224, 0.15);
+    --accent-foreground: #60a5fa;
+
+    --destructive: #e41e3f;
+    --destructive-foreground: #ffffff;
+
+    --border: #242c36;
+    --input: #303945;
+    --ring: #1876f2;
+
+    --hairline: #242c36;
+    --hairline-soft: #1d232c;
+    --surface: #14181d;
+    --surface-raised: #1a1f26;
+    --surface-soft: #181d24;
   }
 
   * {
-    border-color: var(--hairline);
+    border-color: var(--border);
   }
 
   html {
@@ -39,29 +138,32 @@
     background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
-    font-feature-settings:
-      "rlig" 1,
-      "calt" 1;
+    letter-spacing: -0.011em;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
   }
 
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+
   ::selection {
-    background: rgba(255, 255, 255, 0.22);
+    background: #0064e0;
     color: #ffffff;
   }
 }
 
 .kbd {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: #131316;
-  border-radius: 2px;
-  color: #a1a1aa;
+  border: 1px solid var(--border);
+  background: var(--muted);
+  color: var(--muted-foreground);
   font-family: var(--font-mono);
   font-size: 10px;
   line-height: 1;
-  padding: 3px 5px;
-  white-space: nowrap;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
 }
 
 ::-webkit-scrollbar {
@@ -72,11 +174,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
-  border-radius: 0;
+  background: #242c36;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: #303945;
 }
 
 @keyframes fade-in {
@@ -86,7 +188,7 @@
   }
   to {
     opacity: 1;
-    transform: none;
+    transform: translateY(0);
   }
 }
 .animate-fade-in {
@@ -96,11 +198,11 @@
 @keyframes palette-in {
   from {
     opacity: 0;
-    transform: translateY(-8px) scale(0.985);
+    transform: scale(0.985) translateY(-6px);
   }
   to {
     opacity: 1;
-    transform: none;
+    transform: scale(1) translateY(0);
   }
 }
 .animate-palette-in {

@@ -6,7 +6,7 @@ import * as React from "react";
 import { cn } from "../../lib/utils";
 
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-1.5 rounded-sm text-[11px] font-medium whitespace-nowrap ring-offset-[#050505] transition-colors transition-transform focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:outline-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors transition-transform focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0",
   {
     defaultVariants: {
       size: "default",
@@ -14,28 +14,33 @@ export const buttonVariants = cva(
     },
     variants: {
       size: {
-        default: "h-7.5 px-2.5",
+        default: "h-7.5 px-3.5",
         icon: "h-7.5 w-7.5 p-0",
-        lg: "h-8.5 px-3.5",
-        sm: "h-6.5 px-2 text-[10px]",
+        lg: "h-9 px-4.5 text-xs",
+        sm: "h-6.5 px-2.5 text-[10px]",
       },
       variant: {
-        default: "bg-zinc-100 text-zinc-950 hover:bg-white",
+        default:
+          "bg-primary text-primary-foreground hover:bg-[#0457cb] shadow-sm",
+        commerce:
+          "bg-primary text-primary-foreground hover:bg-[#0457cb] shadow-sm",
+        marketing: "bg-foreground text-background hover:opacity-90",
         destructive:
-          "border border-rose-500/25 bg-rose-950/60 text-rose-200 hover:bg-rose-900/60",
-        ghost: "text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-100",
-        link: "text-zinc-300 underline-offset-4 hover:underline",
+          "border border-destructive/30 bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        ghost:
+          "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
         outline:
-          "border border-white/10 bg-white/[0.02] text-zinc-200 hover:border-white/20 hover:bg-white/[0.06]",
-        secondary: "bg-white/[0.07] text-zinc-100 hover:bg-white/[0.12]",
+          "border border-border bg-transparent text-foreground hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
       },
     },
   }
 );
 
 export interface ButtonProps
-  extends
-    React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }

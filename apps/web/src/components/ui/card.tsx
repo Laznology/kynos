@@ -8,7 +8,7 @@ export const Card = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "rounded-md border border-white/[0.07] bg-[#0a0a0d] text-zinc-100",
+      "rounded-xl border border-border bg-card text-card-foreground shadow-sm",
       className
     )}
     {...props}
@@ -29,7 +29,7 @@ export const CardTitle = ({
 }: React.HTMLAttributes<HTMLHeadingElement>) => (
   <h3
     className={cn(
-      "text-[13px] leading-none font-semibold tracking-tight text-zinc-100",
+      "text-[13px] leading-none font-semibold tracking-tight text-foreground",
       className
     )}
     {...props}
@@ -43,7 +43,7 @@ export const CardDescription = ({
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) => (
   <p
-    className={cn("text-[11px] leading-relaxed text-zinc-400", className)}
+    className={cn("text-[11px] leading-relaxed text-muted-foreground", className)}
     {...props}
   />
 );
