@@ -361,7 +361,7 @@ export class KynosWhatsAppBot {
       this.sock = makeWASocket({
         auth: state,
         browser: ["Kynos Bot", "Chrome", "1.0.0"],
-        generateHighQualityLinkPreview: true,
+        generateHighQualityLinkPreview: false,
         logger,
         printQRInTerminal: false,
         version,

@@ -53,7 +53,7 @@ VOLUME /data
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=4s --start-period=25s --retries=3 \
   CMD wget -qO- http://127.0.0.1:3001/api/bot/status >/dev/null || exit 1
-CMD ["bun", "run", "apps/bot/src/index.ts"]
+CMD ["bun", "--smol", "run", "apps/bot/src/index.ts"]
 
 FROM base AS web
 ENV NODE_ENV=production
