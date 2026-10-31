@@ -495,15 +495,21 @@ export class KynosWhatsAppBot {
     const jid = msg.key.remoteJid;
     const isGroup = jid.endsWith("@g.us");
     const contextInfo = extractContextInfo(msg.message);
+    const sender = msg.key.participant || jid;
+    const senderName = msg.pushName || undefined;
+    const settings = getSettings();
+    const text = extractMessageText(msg.message);
+    const prefix = settings.bot_prefix || "/";
+    const isSlashCommand = text.startsWith(prefix);
+
     if (
       isGroup &&
+      !isSlashCommand &&
       !isBotTriggered(contextInfo, this.sock.user?.id, this.sock.user?.lid)
     ) {
       return;
     }
-    const sender = msg.key.participant || jid;
-    const senderName = msg.pushName || undefined;
-    const settings = getSettings();
+
     const hasAccess = await this.ensureMessageAccess(
       jid,
       sender,
@@ -515,7 +521,6 @@ export class KynosWhatsAppBot {
       return;
     }
 
-    const text = extractMessageText(msg.message);
     const { mediaBuffer, mimetype } = await extractMedia(msg);
     const quoted = await extractQuoted(
       msg,
@@ -524,8 +529,6 @@ export class KynosWhatsAppBot {
       isGroup,
       sender
     );
-
-    const prefix = settings.bot_prefix || "/";
 
     const reply = async (replyText: string) => {
       if (this.sock) {
@@ -557,7 +560,6 @@ export class KynosWhatsAppBot {
     if (handled) {
       return;
     }
-
 
     const prompt = formatUserPrompt(text, quoted);
     if (!prompt) {
