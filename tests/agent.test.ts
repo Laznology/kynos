@@ -9,6 +9,7 @@ import {
   formatUserPrompt,
 } from "../apps/bot/src/agent/prompt";
 import {
+  browserAutomationTool,
   calculatorTool,
   datetimeTool,
   getAgentTools,
@@ -103,6 +104,18 @@ describe("Agent Core & Tools (Vercel AI SDK)", () => {
     expect(tools.calculator).toBeDefined();
     expect(tools.datetime).toBeDefined();
     expect(tools.web_search).toBeUndefined();
+  });
+
+  it("should expose browser automation and reject unsafe URL schemes", async () => {
+    const tools = getAgentTools({ jid: "test@s.whatsapp.net" });
+    expect(tools.browser_automation).toBeDefined();
+
+    const raw = await browserAutomationTool.execute(
+      { action: "open", url: "file:///etc/passwd" },
+      { context: {}, messages: [], toolCallId: "test-browser-call" }
+    );
+    const parsed = destr<{ error: string }>(raw);
+    expect(parsed.error).toContain("Only HTTP and HTTPS URLs are allowed");
   });
 
   it("exposes no tools when allowlist is empty", () => {

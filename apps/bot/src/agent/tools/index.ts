@@ -1,6 +1,7 @@
 import type { ToolSet } from "ai";
 
 import type { AgentContext } from "../types";
+import { browserAutomationTool } from "./browser";
 import { calculatorTool } from "./calculator";
 import { datetimeTool } from "./datetime";
 import { createMemoryTool } from "./memory";
@@ -15,6 +16,7 @@ export const getAgentTools = (
   enabledToolIds?: string[]
 ): ToolSet => {
   const all: ToolSet = {
+    browser_automation: browserAutomationTool,
     calculator: calculatorTool,
     datetime: datetimeTool,
     memory: createMemoryTool(context),
@@ -41,6 +43,7 @@ export const getAgentTools = (
 };
 
 export { calculatorTool } from "./calculator";
+export { browserAutomationTool } from "./browser";
 export { datetimeTool } from "./datetime";
 export { createMemoryTool } from "./memory";
 export { createReminderTool } from "./reminder";

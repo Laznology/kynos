@@ -177,6 +177,12 @@ export const AVAILABLE_TOOLS = [
     name: "Web Search",
   },
   {
+    description:
+      "Open, inspect, interact with, and screenshot public web pages",
+    id: "browser_automation",
+    name: "Browser Automation",
+  },
+  {
     description: "Safe math expression solver",
     id: "calculator",
     name: "Calculator",
