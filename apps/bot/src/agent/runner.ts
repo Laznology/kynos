@@ -7,6 +7,7 @@ import {
   getUserFacts,
 } from "@kynos/db";
 import { generateText, stepCountIs } from "ai";
+import type { ModelMessage } from "ai";
 import { destr } from "destr";
 
 import { getLanguageModel } from "./client";
@@ -14,11 +15,6 @@ import { formatAgentErrorMessage } from "./error-handler";
 import { buildKynosSystemPrompt, extractThoughts } from "./prompt";
 import { getAgentTools } from "./tools";
 import type { AgentContext, AgentRunResult } from "./types";
-
-interface ModelMessage {
-  role: "user" | "assistant" | "system";
-  content: string;
-}
 
 const extractStatusCode = (data: unknown): number | undefined => {
   if (!data || typeof data !== "object") {
@@ -118,8 +114,19 @@ export const runKynosAgent = async (
     }
   }
 
+  const userContent: ModelMessage["content"] = context.mediaBuffer
+    ? [
+        { text: userPrompt, type: "text" },
+        {
+          image: context.mediaBuffer,
+          mimeType: context.mediaMimetype || "image/png",
+          type: "image",
+        },
+      ]
+    : userPrompt;
+
   messages.push({
-    content: userPrompt,
+    content: userContent,
     role: "user",
   });
 

@@ -29,8 +29,10 @@ import { renderSVG } from "uqr";
 
 import { runKynosAgent } from "./agent";
 import { formatUserPrompt } from "./agent/prompt";
+import type { AgentContext } from "./agent/types";
 import { dispatchCommand } from "./commands";
 import type { CommandContext } from "./commands";
+import { stickerToImage } from "./media";
 import {
   buildAccessDeniedReply,
   isBotTriggered,
@@ -60,6 +62,50 @@ const findWorkspaceRoot = (startDir: string): string => {
     curr = parent;
   }
   return startDir;
+};
+
+const getGroupParticipants = async (
+  sock: WASocket,
+  jid: string
+): Promise<AgentContext["groupParticipants"]> => {
+  const metadata = await sock.groupMetadata(jid);
+  return metadata.participants.map((participant) => ({
+    jid: jidNormalizedUser(participant.id),
+    name:
+      participant.notify?.trim() ||
+      participant.id.split("@")[0],
+  }));
+};
+
+const findMentionedJids = (
+  text: string,
+  participants: AgentContext["groupParticipants"]
+): string[] => {
+  if (!participants || participants.length === 0) {
+    return [];
+  }
+  const lowerText = text.toLocaleLowerCase();
+  return participants
+    .filter((participant) =>
+      lowerText.includes(`@${participant.name.toLocaleLowerCase()}`)
+    )
+    .map((participant) => participant.jid);
+};
+
+const normalizeMentionNames = (
+  text: string,
+  participants: AgentContext["groupParticipants"]
+): string => {
+  if (!participants || participants.length === 0) {
+    return text;
+  }
+  return text.replace(/@(\d{5,16})/gu, (mention, number) => {
+    const participant = participants.find((item) => {
+      const participantNumber = item.jid.split("@")[0]?.split(":")[0];
+      return participantNumber === number;
+    });
+    return participant ? `@${participant.name}` : mention;
+  });
 };
 
 const AUTH_DIR =
@@ -323,7 +369,7 @@ const runAgentReply = async (
   sock: WASocket,
   jid: string,
   prompt: string,
-  context: { isGroup: boolean; jid: string; senderName?: string },
+  context: AgentContext,
   reply: (text: string) => Promise<void>
 ) => {
   await sock.presenceSubscribe(jid);
@@ -530,9 +576,27 @@ export class KynosWhatsAppBot {
       sender
     );
 
+    let groupParticipants: AgentContext["groupParticipants"];
+    if (isGroup) {
+      try {
+        groupParticipants = await getGroupParticipants(this.sock, jid);
+      } catch (error) {
+        logger.warn({ error, jid }, "Failed to load group participants");
+      }
+    }
+
     const reply = async (replyText: string) => {
       if (this.sock) {
-        await this.sock.sendMessage(jid, { text: replyText }, { quoted: msg });
+        const normalizedReply = normalizeMentionNames(
+          replyText,
+          groupParticipants
+        );
+        const mentions = findMentionedJids(normalizedReply, groupParticipants);
+        await this.sock.sendMessage(
+          jid,
+          { mentions, text: normalizedReply },
+          { quoted: msg }
+        );
       }
     };
 
@@ -561,16 +625,34 @@ export class KynosWhatsAppBot {
       return;
     }
 
-    const prompt = formatUserPrompt(text, quoted);
+    const currentMessage = unwrapMessage(msg.message);
+    const currentIsSticker = Boolean(currentMessage?.stickerMessage);
+    const prompt =
+      formatUserPrompt(text, quoted) ||
+      (currentIsSticker ? "[Incoming sticker]" : "");
     if (!prompt) {
       return;
     }
+
+    const visionMedia =
+      quoted?.isSticker && quoted.mediaBuffer
+        ? await stickerToImage(quoted.mediaBuffer)
+        : currentIsSticker && mediaBuffer
+          ? await stickerToImage(mediaBuffer)
+          : undefined;
 
     await runAgentReply(
       this.sock,
       jid,
       prompt,
-      { isGroup, jid, senderName },
+      {
+        isGroup,
+        jid,
+        groupParticipants,
+        mediaBuffer: visionMedia,
+        mediaMimetype: visionMedia ? "image/png" : undefined,
+        senderName,
+      },
       reply
     );
   }

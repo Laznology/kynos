@@ -54,7 +54,22 @@ jobs:
             type=ref,event=tag
             type=sha,format=short,prefix=
 
-      - uses: docker/build-push-action@v6
+      - if: github.event_name == 'pull_request'
+        uses: docker/build-push-action@v6
+        with:
+          build-args: |
+            INSTALL_FILTER=${{ matrix.filter }}
+          cache-from: type=gha,scope=${{ matrix.target }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.target }}
+          context: .
+          labels: ${{ steps.tags.outputs.labels }}
+          provenance: mode=min
+          push: false
+          tags: ${{ steps.tags.outputs.tags }}
+          target: ${{ matrix.target }}
+
+      - if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v6
         with:
           build-args: |
             INSTALL_FILTER=${{ matrix.filter }}

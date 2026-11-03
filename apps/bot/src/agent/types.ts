@@ -1,5 +1,11 @@
 export interface AgentContext {
   jid: string;
+  groupParticipants?: {
+    jid: string;
+    name: string;
+  }[];
+  mediaBuffer?: Buffer;
+  mediaMimetype?: string;
   senderName?: string;
   isGroup?: boolean;
 }
