@@ -29,6 +29,13 @@ export const buildKynosSystemPrompt = (
       : "";
 
   const activeSkills = skills?.filter((s) => s.enabled) || [];
+  const groupParticipants = context.groupParticipants || [];
+  const groupParticipantsBlock =
+    context.isGroup && groupParticipants.length > 0
+      ? `\n[GROUP CONTACTS]\n${groupParticipants
+          .map((participant) => `- ${participant.name} (${participant.jid})`)
+          .join("\n")}\n`
+      : "";
   const skillsBlock =
     activeSkills.length > 0
       ? `\n[AVAILABLE PROCEDURAL SKILLS]
@@ -50,6 +57,7 @@ When you solve complex workflows or when the user provides procedural instructio
 - User JID: ${context.jid}
 - Chat Type: ${context.isGroup ? "Group Chat" : "Private DM"}
 ${context.senderName ? `- Sender Name: ${context.senderName}` : ""}${memoryBlock}${skillsBlock}
+${groupParticipantsBlock}
 [FORMATTING & OPERATIONAL DIRECTIVES]
 1. Use WhatsApp styling: *bold* for emphasis and headings, _italic_ for metadata, bullet points for lists.
 2. Do not output markdown tables as they break on mobile WhatsApp viewports.
@@ -57,7 +65,8 @@ ${context.senderName ? `- Sender Name: ${context.senderName}` : ""}${memoryBlock
 4. Prioritize concise answers. Strip conversational filler and unrequested disclaimers.
 5. Reason inside <thought>...</thought> tags before responding or selecting a tool.
 6. The <thought> block is your private reasoning trace. Your final reply must be outside <thought> tags.
-7. When the user quotes or replies to a previous message, utilize the provided quoted message context to formulate an accurate and directly relevant response.`;
+7. When the user quotes or replies to a previous message, utilize the provided quoted message context to formulate an accurate and directly relevant response.
+8. In group chats, use the contact name from [GROUP CONTACTS] when referring to or tagging a participant. Never expose a raw WhatsApp JID or phone number as a person's name.`;
 };
 
 export const extractThoughts = (
