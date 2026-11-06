@@ -6,6 +6,7 @@ import {
   getSkills,
   getUserFacts,
 } from "@kynos/db";
+import { normalizeMaxOutputTokens } from "@kynos/shared";
 import { generateText, stepCountIs } from "ai";
 import type { ModelMessage } from "ai";
 import { destr } from "destr";
@@ -148,7 +149,7 @@ export const runKynosAgent = async (
 
   try {
     const result = await generateText({
-      maxOutputTokens: settings.ai_max_tokens,
+      maxOutputTokens: normalizeMaxOutputTokens(settings.ai_max_tokens),
       messages,
       model,
       onStepFinish: (step) => {

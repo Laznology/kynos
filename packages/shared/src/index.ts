@@ -36,6 +36,19 @@ export interface AppSettings {
   tools_enabled: string[];
 }
 
+export const normalizeMaxOutputTokens = (value: unknown): number => {
+  const raw = String(value ?? "").trim();
+  const groupedThousands = raw.match(/^(?<head>\d{1,3})\.(?<tail>\d{3})$/u);
+  const parsed = groupedThousands
+    ? Number(`${groupedThousands.groups?.head}${groupedThousands.groups?.tail}`)
+    : Number(value);
+
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return 2048;
+  }
+  return Math.min(1_000_000, Math.trunc(parsed));
+};
+
 export interface ChatMessage {
   id?: number;
   jid: string;

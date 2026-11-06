@@ -588,6 +588,9 @@ export const AiRuntimeSection = ({
                   ai_max_tokens: Number(e.target.value),
                 }))
               }
+              max={1_000_000}
+              min={1}
+              step={1}
               type="number"
               value={settings.ai_max_tokens}
             />
