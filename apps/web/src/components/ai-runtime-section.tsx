@@ -541,6 +541,29 @@ export const AiRuntimeSection = ({
             />
           </div>
           <div className="space-y-1.5">
+            <Label htmlFor="tavily_api_key">
+              <Key className="h-3 w-3" />
+              Tavily Search API Key
+            </Label>
+            <Input
+              className="font-mono text-xs"
+              id="tavily_api_key"
+              onChange={(e) =>
+                setSettings((prev) => ({
+                  ...prev,
+                  tavily_api_key: e.target.value,
+                }))
+              }
+              placeholder="Optional; enables parallel Tavily + DuckDuckGo search"
+              type="password"
+              value={settings.tavily_api_key}
+            />
+            <p className="text-muted-foreground text-[11px] leading-relaxed">
+              Without a key, DuckDuckGo remains active. With a key, both
+              providers run in parallel and duplicate results are removed.
+            </p>
+          </div>
+          <div className="space-y-1.5">
             <Label htmlFor="model_id">Model ID (Manual Override)</Label>
             <Input
               className="font-mono text-xs"

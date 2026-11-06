@@ -110,4 +110,5 @@ export const weatherTool = tool({
         "City or region name, e.g. 'Jakarta', 'Bandung', 'Tokyo', 'London'"
       ),
   }),
+  strict: true,
 });

@@ -142,4 +142,5 @@ export const skillManageTool = tool({
         "Kebab-case skill identifier (required for create, update, patch, delete, read)"
       ),
   }),
+  strict: true,
 });

@@ -40,4 +40,5 @@ export const datetimeTool = tool({
         "IANA timezone identifier, e.g. 'Asia/Jakarta', 'UTC', 'America/New_York'. Default: 'Asia/Jakarta'."
       ),
   }),
+  strict: true,
 });

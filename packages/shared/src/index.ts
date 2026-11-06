@@ -32,6 +32,7 @@ export interface AppSettings {
   owner_jid: string;
   sticker_pack_name: string;
   sticker_pack_author: string;
+  tavily_api_key: string;
   tools_enabled: string[];
 }
 
@@ -172,7 +173,8 @@ export const DEFAULT_SYSTEM_PROMPT = `You are Kynos, an autonomous WhatsApp AI a
 
 export const AVAILABLE_TOOLS = [
   {
-    description: "Search DuckDuckGo for live internet info",
+    description:
+      "Search live internet info with DuckDuckGo and optional Tavily",
     id: "web_search",
     name: "Web Search",
   },

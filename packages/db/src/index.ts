@@ -199,6 +199,7 @@ export const initDatabase = (): void => {
     owner_jid: JSON.stringify("@ilazer"),
     sticker_pack_author: "Kynos Bot",
     sticker_pack_name: "Kynos",
+    tavily_api_key: "",
     tools_enabled: JSON.stringify(TOOL_IDS),
   };
 
@@ -269,6 +270,7 @@ const SCALAR_DEFAULTS = {
   owner_jid: "@ilazer",
   sticker_pack_author: "Kynos Bot",
   sticker_pack_name: "Kynos",
+  tavily_api_key: "",
 };
 
 const scalar = (
@@ -301,6 +303,7 @@ export const getSettings = (): AppSettings => {
     owner_jid: String(scalar(map, "owner_jid")),
     sticker_pack_author: String(scalar(map, "sticker_pack_author")),
     sticker_pack_name: String(scalar(map, "sticker_pack_name")),
+    tavily_api_key: String(scalar(map, "tavily_api_key")),
     tools_enabled: parseToolsEnabled(map.tools_enabled),
   };
 };

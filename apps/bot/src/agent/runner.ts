@@ -86,6 +86,18 @@ const parseErrorTrace = (error: unknown, errorMsg: string) => {
     statusCode,
   };
 };
+
+const serializeToolValue = (value: unknown): string => {
+  if (typeof value === "string") {
+    return value;
+  }
+  try {
+    return JSON.stringify(value ?? "");
+  } catch {
+    return String(value);
+  }
+};
+
 export const runKynosAgent = async (
   userPrompt: string,
   context: AgentContext
@@ -94,7 +106,7 @@ export const runKynosAgent = async (
   const model = getLanguageModel(settings);
   const userFacts = getUserFacts(context.jid);
   const skills = getSkills(true);
-  const tools = getAgentTools(context, settings.tools_enabled);
+  const tools = getAgentTools(context, settings.tools_enabled, settings);
   const systemPrompt = buildKynosSystemPrompt(
     settings,
     context,
@@ -136,6 +148,7 @@ export const runKynosAgent = async (
 
   try {
     const result = await generateText({
+      maxOutputTokens: settings.ai_max_tokens,
       messages,
       model,
       onStepFinish: (step) => {
@@ -144,15 +157,12 @@ export const runKynosAgent = async (
             const tr = step.toolResults?.find(
               (r) => r.toolCallId === tc.toolCallId
             );
-            let rawOutput = "";
-            if (tr && "result" in tr) {
-              rawOutput =
-                typeof tr.result === "string"
-                  ? tr.result
-                  : JSON.stringify(tr.result ?? "");
-            }
+            const rawOutput =
+              tr && "output" in tr ? serializeToolValue(tr.output) : "";
             const rawArgs =
-              "args" in tc ? (tc.args as Record<string, unknown>) : {};
+              "input" in tc && tc.input && typeof tc.input === "object"
+                ? (tc.input as Record<string, unknown>)
+                : {};
             toolCallsExecuted.push({
               arguments: rawArgs,
               name: tc.toolName,
@@ -174,6 +184,17 @@ export const runKynosAgent = async (
     const parsed = extractThoughts(result.text);
     replyText = parsed.cleanText;
     extractedThoughtsText = parsed.thoughts || "";
+
+    if (!replyText) {
+      const lastToolCall = toolCallsExecuted.at(-1);
+      replyText = lastToolCall?.result
+        ? `Hasil ${lastToolCall.name}:\n${lastToolCall.result}`
+        : "Maaf, model tidak menghasilkan balasan. Silakan coba lagi.";
+      addAuditLog("warn", "agent", "AI returned an empty reply", {
+        finishReason: result.finishReason,
+        toolCallsExecuted,
+      });
+    }
 
     addAuditLog(
       "info",

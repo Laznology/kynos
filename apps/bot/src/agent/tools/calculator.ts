@@ -192,4 +192,5 @@ export const calculatorTool = tool({
         "The mathematical expression to evaluate, e.g. '(15 * 4) + sqrt(144) - 2^3'"
       ),
   }),
+  strict: true,
 });
