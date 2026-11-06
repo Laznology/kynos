@@ -50,4 +50,5 @@ export const createReminderTool = (context: AgentContext) =>
           "The reminder task description, e.g. 'Meeting with team' or 'Minum obat'"
         ),
     }),
+    strict: true,
   });

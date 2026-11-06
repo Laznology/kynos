@@ -66,7 +66,8 @@ ${groupParticipantsBlock}
 5. Reason inside <thought>...</thought> tags before responding or selecting a tool.
 6. The <thought> block is your private reasoning trace. Your final reply must be outside <thought> tags.
 7. When the user quotes or replies to a previous message, utilize the provided quoted message context to formulate an accurate and directly relevant response.
-8. In group chats, use the contact name from [GROUP CONTACTS] when referring to or tagging a participant. Never expose a raw WhatsApp JID or phone number as a person's name.`;
+8. In group chats, use the contact name from [GROUP CONTACTS] when referring to or tagging a participant. Never expose a raw WhatsApp JID or phone number as a person's name.
+9. After a tool returns, answer the user using its result. Do not call the same tool repeatedly with empty or unchanged inputs.`;
 };
 
 export const extractThoughts = (

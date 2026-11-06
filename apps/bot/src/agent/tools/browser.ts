@@ -131,4 +131,5 @@ export const browserAutomationTool = tool({
     }
   },
   inputSchema: browserInputSchema,
+  strict: true,
 });

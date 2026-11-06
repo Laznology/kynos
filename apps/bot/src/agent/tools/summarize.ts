@@ -90,4 +90,5 @@ export const summarizeTool = tool({
       .string()
       .describe("The complete HTTP/HTTPS URL to fetch and summarize"),
   }),
+  strict: true,
 });

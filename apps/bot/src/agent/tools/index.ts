@@ -1,3 +1,4 @@
+import type { AppSettings } from "@kynos/shared";
 import type { ToolSet } from "ai";
 
 import type { AgentContext } from "../types";
@@ -9,11 +10,12 @@ import { createReminderTool } from "./reminder";
 import { skillManageTool } from "./skill-manage";
 import { summarizeTool } from "./summarize";
 import { weatherTool } from "./weather";
-import { webSearchTool } from "./web-search";
+import { createWebSearchTool, webSearchTool } from "./web-search";
 
 export const getAgentTools = (
   context: AgentContext,
-  enabledToolIds?: string[]
+  enabledToolIds?: string[],
+  settings?: Pick<AppSettings, "tavily_api_key">
 ): ToolSet => {
   const all: ToolSet = {
     browser_automation: browserAutomationTool,
@@ -24,7 +26,9 @@ export const getAgentTools = (
     skill_manage: skillManageTool,
     summarize: summarizeTool,
     weather: weatherTool,
-    web_search: webSearchTool,
+    web_search: settings
+      ? createWebSearchTool(settings.tavily_api_key)
+      : webSearchTool,
   };
 
   if (!enabledToolIds) {
@@ -51,3 +55,4 @@ export { skillManageTool } from "./skill-manage";
 export { summarizeTool } from "./summarize";
 export { weatherTool } from "./weather";
 export { webSearchTool } from "./web-search";
+export { createWebSearchTool } from "./web-search";

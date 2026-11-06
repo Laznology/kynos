@@ -78,4 +78,5 @@ export const createMemoryTool = (context: AgentContext) =>
           "The numeric ID of the fact to delete (required if action is 'delete')"
         ),
     }),
+    strict: true,
   });
