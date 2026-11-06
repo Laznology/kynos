@@ -18,7 +18,7 @@ import {
   addAuditLog,
   getAuditLogs,
 } from "@kynos/db";
-import { AVAILABLE_TOOLS } from "@kynos/shared";
+import { AVAILABLE_TOOLS, normalizeMaxOutputTokens } from "@kynos/shared";
 
 describe("Database Repository (Drizzle ORM)", () => {
   initDatabase();
@@ -32,6 +32,7 @@ describe("Database Repository (Drizzle ORM)", () => {
       ai_temperature: 0.9,
       sticker_pack_name: "TestPack",
     });
+
     expect(updated.ai_temperature).toBe(0.9);
     expect(updated.sticker_pack_name).toBe("TestPack");
 
@@ -45,6 +46,13 @@ describe("Database Repository (Drizzle ORM)", () => {
     expect(withGroups.allowed_groups).toEqual(["12036aaa@g.us"]);
     updateSettings({ allowed_groups: [] });
     expect(getSettings().allowed_groups).toEqual([]);
+  });
+
+  it("normalizes max output tokens to an integer", () => {
+    expect(normalizeMaxOutputTokens("65.536")).toBe(65_536);
+    expect(normalizeMaxOutputTokens(65.536)).toBe(65_536);
+    expect(normalizeMaxOutputTokens(2048)).toBe(2048);
+    expect(normalizeMaxOutputTokens("invalid")).toBe(2048);
   });
 
   it("normalizes allowed_users into bare whatsapp JIDs", () => {

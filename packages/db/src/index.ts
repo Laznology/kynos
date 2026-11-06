@@ -17,6 +17,7 @@ import type {
 import {
   AVAILABLE_TOOLS,
   DEFAULT_SYSTEM_PROMPT,
+  normalizeMaxOutputTokens,
   normalizeUserJid,
 } from "@kynos/shared";
 import { destr } from "destr";
@@ -289,7 +290,7 @@ export const getSettings = (): AppSettings => {
   return {
     ai_api_key: String(scalar(map, "ai_api_key")),
     ai_base_url: String(scalar(map, "ai_base_url")),
-    ai_max_tokens: Number(scalar(map, "ai_max_tokens")),
+    ai_max_tokens: normalizeMaxOutputTokens(scalar(map, "ai_max_tokens")),
     ai_model: String(scalar(map, "ai_model")),
     ai_provider: parseProvider(String(scalar(map, "ai_provider"))),
     ai_reasoning_effort: parseReasoningEffort(
@@ -314,7 +315,12 @@ export const updateSettings = (partial: Partial<AppSettings>): AppSettings => {
 
   for (const [k, v] of Object.entries(partial)) {
     if (v !== undefined) {
-      const valStr = typeof v === "object" ? JSON.stringify(v) : String(v);
+      const normalizedValue =
+        k === "ai_max_tokens" ? normalizeMaxOutputTokens(v) : v;
+      const valStr =
+        typeof normalizedValue === "object"
+          ? JSON.stringify(normalizedValue)
+          : String(normalizedValue);
       db.insert(schema.settingsTable)
         .values({ key: k, updatedAt: now, value: valStr })
         .onConflictDoUpdate({
