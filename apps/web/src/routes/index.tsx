@@ -4,13 +4,19 @@ import type {
   AuditLog,
   BotState,
   BotStatus,
+  Reminder,
   SkillRecord,
+  UserFact,
 } from "@kynos/shared";
 import {
   ArrowCounterClockwise,
+  Bell,
   CheckCircle,
+  Clock,
   Code,
+  Database,
   FloppyDisk,
+  PencilSimple,
   Plus,
   ShieldCheck,
   SlidersHorizontal,
@@ -37,13 +43,18 @@ import { SimpleIcon } from "../components/ui/simple-icon";
 import { Switch } from "../components/ui/switch";
 import { Textarea } from "../components/ui/textarea";
 import {
+  createMemoryFn,
   createSkillFn,
+  deleteMemoryFn,
+  deleteReminderFn,
   deleteSkillFn,
   fetchAvailableModels,
   fetchDashboardData,
   saveSettingsFn,
   toggleSkillFn,
   triggerBotRestartFn,
+  updateMemoryFn,
+  updateReminderStatusFn,
 } from "../lib/server-api";
 import type { DashboardData, ModelOption } from "../lib/server-api";
 import { getDashboardDataFn } from "../lib/server-fn";
@@ -65,6 +76,8 @@ const NAV_SECTIONS: { id: NavSection; keywords: string; label: string }[] = [
     label: "Tools",
   },
   { id: "skills", keywords: "skill expertise workflow", label: "Skills" },
+  { id: "memory", keywords: "memory facts preferences context user", label: "Memory" },
+  { id: "reminders", keywords: "reminders events queue calendar task", label: "Reminders" },
   { id: "audit", keywords: "log history event execution", label: "Audit" },
 ];
 
@@ -569,6 +582,438 @@ const ToolsSection = ({
     </div>
   </div>
 );
+const MemorySection = ({
+  handleCreateMemorySubmit,
+  handleDeleteMemory,
+  handleUpdateMemorySubmit,
+  isPending,
+  memories,
+  newMemoryCategory,
+  newMemoryFact,
+  newMemoryJid,
+  setNewMemoryCategory,
+  setNewMemoryFact,
+  setNewMemoryJid,
+  setShowMemoryForm,
+  showMemoryForm,
+}: {
+  handleCreateMemorySubmit: (e: React.FormEvent) => void;
+  handleDeleteMemory: (id: number) => void;
+  handleUpdateMemorySubmit: (id: number, fact: string, category: string) => void;
+  isPending: boolean;
+  memories: UserFact[];
+  newMemoryCategory: string;
+  newMemoryFact: string;
+  newMemoryJid: string;
+  setNewMemoryCategory: (v: string) => void;
+  setNewMemoryFact: (v: string) => void;
+  setNewMemoryJid: (v: string) => void;
+  setShowMemoryForm: (v: boolean | ((b: boolean) => boolean)) => void;
+  showMemoryForm: boolean;
+}) => {
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editFact, setEditFact] = useState("");
+  const [editCategory, setEditCategory] = useState("general");
+  const [search, setSearch] = useState("");
+
+  const filteredMemories = memories.filter((m) => {
+    const q = search.toLowerCase().trim();
+    if (!q) {
+      return true;
+    }
+    return (
+      m.fact.toLowerCase().includes(q) ||
+      m.jid.toLowerCase().includes(q) ||
+      m.category.toLowerCase().includes(q)
+    );
+  });
+
+  const startEdit = (m: UserFact) => {
+    setEditingId(m.id ?? null);
+    setEditFact(m.fact);
+    setEditCategory(m.category || "general");
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditFact("");
+  };
+
+  const saveEdit = (id: number) => {
+    if (!editFact.trim()) {
+      return;
+    }
+    handleUpdateMemorySubmit(id, editFact.trim(), editCategory.trim() || "general");
+    setEditingId(null);
+  };
+
+  return (
+    <div className="border-border bg-card rounded-2xl border shadow-sm">
+      <div className="border-border flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3.5">
+        <div className="flex items-center gap-2.5">
+          <Database className="text-muted-foreground h-4 w-4" />
+          <h2 className="text-foreground text-sm font-semibold tracking-tight">
+            User Memory & Facts
+          </h2>
+        </div>
+        <div className="flex items-center gap-2">
+          <Input
+            className="h-8 w-44 font-mono text-xs sm:w-56"
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search fact, JID..."
+            value={search}
+          />
+          <Button
+            className="h-8 rounded-full px-3 text-xs"
+            onClick={() => setShowMemoryForm((prev) => !prev)}
+            size="sm"
+            variant="outline"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            New fact
+          </Button>
+        </div>
+      </div>
+
+      {showMemoryForm && (
+        <form
+          className="animate-fade-in border-border bg-secondary/30 space-y-3.5 border-b p-5"
+          onSubmit={handleCreateMemorySubmit}
+        >
+          <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label
+                className="text-muted-foreground text-xs font-medium"
+                htmlFor="new-memory-jid"
+              >
+                User WhatsApp JID or Number
+              </Label>
+              <Input
+                className="font-mono text-xs"
+                id="new-memory-jid"
+                onChange={(e) => setNewMemoryJid(e.target.value)}
+                placeholder="628123456789@s.whatsapp.net"
+                required
+                value={newMemoryJid}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label
+                className="text-muted-foreground text-xs font-medium"
+                htmlFor="new-memory-category"
+              >
+                Category
+              </Label>
+              <Input
+                className="font-mono text-xs"
+                id="new-memory-category"
+                onChange={(e) => setNewMemoryCategory(e.target.value)}
+                placeholder="preference, identity, work, general"
+                value={newMemoryCategory}
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label
+              className="text-muted-foreground text-xs font-medium"
+              htmlFor="new-memory-fact"
+            >
+              Fact Content
+            </Label>
+            <Textarea
+              className="min-h-[80px] font-mono text-xs leading-relaxed"
+              id="new-memory-fact"
+              onChange={(e) => setNewMemoryFact(e.target.value)}
+              placeholder="Prefers brief answers, works as senior devops engineer..."
+              required
+              rows={3}
+              value={newMemoryFact}
+            />
+          </div>
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <Button
+              className="h-8 rounded-full px-3 text-xs"
+              onClick={() => setShowMemoryForm(false)}
+              size="sm"
+              type="button"
+              variant="ghost"
+            >
+              Cancel
+            </Button>
+            <Button
+              className="h-8 rounded-full px-4 text-xs"
+              disabled={isPending || !newMemoryJid.trim() || !newMemoryFact.trim()}
+              size="sm"
+              type="submit"
+            >
+              Save Memory
+            </Button>
+          </div>
+        </form>
+      )}
+
+      <div className="divide-border/60 divide-y">
+        {filteredMemories.length === 0 ? (
+          <div className="p-8 text-center">
+            <Database className="text-muted-foreground mx-auto h-8 w-8 opacity-40" />
+            <p className="text-foreground mt-2 text-sm font-medium">
+              No memory facts stored yet
+            </p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Facts recorded by AI during conversations or added manually will appear here.
+            </p>
+          </div>
+        ) : (
+          filteredMemories.map((m) => {
+            const isEditing = editingId === m.id;
+            return (
+              <div
+                className="flex flex-col gap-3 p-4 transition-colors hover:bg-secondary/20 sm:flex-row sm:items-start sm:justify-between"
+                key={m.id}
+              >
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-xs font-semibold text-foreground">
+                      {m.jid}
+                    </span>
+                    <Badge variant="secondary" className="text-[10px] uppercase font-mono">
+                      {m.category || "general"}
+                    </Badge>
+                    <span className="text-muted-foreground text-[10px]">
+                      {new Date(m.created_at).toLocaleString("id-ID", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                        timeZone: "Asia/Jakarta",
+                      })}
+                    </span>
+                  </div>
+
+                  {isEditing ? (
+                    <div className="mt-2 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          className="h-7 w-40 text-xs font-mono"
+                          onChange={(e) => setEditCategory(e.target.value)}
+                          placeholder="Category"
+                          value={editCategory}
+                        />
+                      </div>
+                      <Textarea
+                        className="min-h-[60px] text-xs font-mono"
+                        onChange={(e) => setEditFact(e.target.value)}
+                        value={editFact}
+                      />
+                      <div className="flex items-center gap-2">
+                        <Button
+                          className="h-7 rounded-full px-3 text-xs"
+                          disabled={isPending || !editFact.trim()}
+                          onClick={() => m.id && saveEdit(m.id)}
+                          size="sm"
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          className="h-7 rounded-full px-3 text-xs"
+                          onClick={cancelEdit}
+                          size="sm"
+                          variant="ghost"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-foreground text-xs leading-relaxed break-words font-mono">
+                      {m.fact}
+                    </p>
+                  )}
+                </div>
+
+                {!isEditing && (
+                  <div className="flex items-center gap-1 self-end sm:self-start">
+                    <Button
+                      aria-label="Edit memory"
+                      className="text-muted-foreground hover:bg-secondary hover:text-foreground h-8 w-8 rounded-full"
+                      onClick={() => startEdit(m)}
+                      size="icon"
+                      variant="ghost"
+                    >
+                      <PencilSimple className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      aria-label="Delete memory"
+                      className="text-muted-foreground hover:bg-destructive/15 hover:text-destructive h-8 w-8 rounded-full"
+                      onClick={() => m.id && handleDeleteMemory(m.id)}
+                      size="icon"
+                      variant="ghost"
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+};
+const getReminderBadgeVariant = (status: Reminder["status"]) => {
+  if (status === "sent") {
+    return "success";
+  }
+  if (status === "cancelled") {
+    return "secondary";
+  }
+  return "warning";
+};
+
+const RemindersSection = ({
+  handleDeleteReminder,
+  handleToggleReminderStatus,
+  isPending,
+  reminders,
+}: {
+  handleDeleteReminder: (id: number) => void;
+  handleToggleReminderStatus: (id: number, currentStatus: Reminder["status"]) => void;
+  isPending: boolean;
+  reminders: Reminder[];
+}) => {
+  const [filter, setFilter] = useState<"all" | "pending" | "sent" | "cancelled">("all");
+  const [search, setSearch] = useState("");
+
+  const filtered = reminders.filter((r) => {
+    if (filter !== "all" && r.status !== filter) {
+      return false;
+    }
+    const q = search.toLowerCase().trim();
+    if (!q) {
+      return true;
+    }
+    return r.task.toLowerCase().includes(q) || r.jid.toLowerCase().includes(q);
+  });
+
+  return (
+    <div className="border-border bg-card rounded-2xl border shadow-sm">
+      <div className="border-border flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3.5">
+        <div className="flex items-center gap-2.5">
+          <Bell className="text-muted-foreground h-4 w-4" />
+          <h2 className="text-foreground text-sm font-semibold tracking-tight">
+            Reminders & Events Queue
+          </h2>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1 rounded-full border border-border bg-secondary/50 p-1 text-xs">
+            {(["all", "pending", "sent", "cancelled"] as const).map((tab) => (
+              <button
+                className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+                  filter === tab
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                key={tab}
+                onClick={() => setFilter(tab)}
+                type="button"
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
+          <Input
+            className="h-8 w-36 font-mono text-xs sm:w-48"
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search task, JID..."
+            value={search}
+          />
+        </div>
+      </div>
+
+      <div className="divide-border/60 divide-y">
+        {filtered.length === 0 ? (
+          <div className="p-8 text-center">
+            <Clock className="text-muted-foreground mx-auto h-8 w-8 opacity-40" />
+            <p className="text-foreground mt-2 text-sm font-medium">
+              No reminders in queue
+            </p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Reminders scheduled by users via WhatsApp chat will appear here.
+            </p>
+          </div>
+        ) : (
+          filtered.map((item) => (
+            <div
+              className="flex flex-col gap-3 p-4 transition-colors hover:bg-secondary/20 sm:flex-row sm:items-start sm:justify-between"
+              key={item.id}
+            >
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-xs font-semibold text-foreground">
+                      {item.jid}
+                    </span>
+                    <Badge
+                      variant={getReminderBadgeVariant(item.status)}
+                      className="text-[10px] uppercase font-mono"
+                    >
+                      {item.status}
+                    </Badge>
+                    <span className="text-muted-foreground text-[10px]">
+                      Trigger:{" "}
+                      {new Date(item.remind_at).toLocaleString("id-ID", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                        timeZone: "Asia/Jakarta",
+                      })}
+                    </span>
+                  </div>
+                  <p className="text-foreground text-xs leading-relaxed break-words font-mono">
+                    {item.task}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-1 self-end sm:self-start">
+                  {item.status === "pending" && (
+                    <Button
+                      aria-label="Cancel reminder"
+                      className="text-xs text-muted-foreground hover:bg-secondary hover:text-foreground h-8 px-2.5 rounded-full"
+                      disabled={isPending}
+                      onClick={() => item.id && handleToggleReminderStatus(item.id, "pending")}
+                      size="sm"
+                      variant="ghost"
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                  {item.status === "cancelled" && (
+                    <Button
+                      aria-label="Re-activate reminder"
+                      className="text-xs text-muted-foreground hover:bg-secondary hover:text-foreground h-8 px-2.5 rounded-full"
+                      disabled={isPending}
+                      onClick={() => item.id && handleToggleReminderStatus(item.id, "cancelled")}
+                      size="sm"
+                      variant="ghost"
+                    >
+                      Re-arm
+                    </Button>
+                  )}
+                  <Button
+                    aria-label="Delete reminder"
+                    className="text-muted-foreground hover:bg-destructive/15 hover:text-destructive h-8 w-8 rounded-full"
+                    disabled={isPending}
+                    onClick={() => item.id && handleDeleteReminder(item.id)}
+                    size="icon"
+                    variant="ghost"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
+      </div>
+    </div>
+  );
+};
 
 const DashboardPage = () => {
   const initialData = Route.useLoaderData();
@@ -577,8 +1022,9 @@ const DashboardPage = () => {
   const [settings, setSettings] = useState<AppSettings>(initialData.settings);
   const [state, setState] = useState<BotState>(initialData.state);
   const [skills, setSkills] = useState<SkillRecord[]>(initialData.skills);
+  const [memories, setMemories] = useState<UserFact[]>(initialData.memories || []);
+  const [reminders, setReminders] = useState<Reminder[]>(initialData.reminders || []);
   const [logs, setLogs] = useState<AuditLog[]>(initialData.logs);
-
   const [isPending, startTransition] = useTransition();
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
 
@@ -589,6 +1035,10 @@ const DashboardPage = () => {
   const [newSkillDesc, setNewSkillDesc] = useState("");
   const [newSkillName, setNewSkillName] = useState("");
 
+  const [showMemoryForm, setShowMemoryForm] = useState(false);
+  const [newMemoryJid, setNewMemoryJid] = useState("");
+  const [newMemoryCategory, setNewMemoryCategory] = useState("general");
+  const [newMemoryFact, setNewMemoryFact] = useState("");
   const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [modelsFetchError, setModelsFetchError] = useState<string | null>(null);
@@ -610,6 +1060,8 @@ const DashboardPage = () => {
         .then((fresh) => {
           setState(fresh.state);
           setLogs(fresh.logs);
+          setMemories(fresh.memories || []);
+          setReminders(fresh.reminders || []);
           return fresh;
         })
         .catch(() => null);
@@ -758,6 +1210,95 @@ const DashboardPage = () => {
     }
   };
 
+  const handleCreateMemorySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMemoryJid.trim() || !newMemoryFact.trim()) {
+      return;
+    }
+    startTransition(async () => {
+      try {
+        const created = await createMemoryFn({
+          data: {
+            category: newMemoryCategory.trim() || "general",
+            fact: newMemoryFact.trim(),
+            jid: newMemoryJid.trim(),
+          },
+        });
+        setMemories((prev) => [created, ...prev]);
+        setNewMemoryFact("");
+        setShowMemoryForm(false);
+        notify("Memory fact saved");
+      } catch (error) {
+        notify(
+          `Save failed: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    });
+  };
+
+  const handleUpdateMemorySubmit = (id: number, fact: string, category: string) => {
+    startTransition(async () => {
+      try {
+        const updated = await updateMemoryFn({
+          data: { category, fact, id },
+        });
+        setMemories((prev) =>
+          prev.map((m) => (m.id === id ? updated : m))
+        );
+        notify("Memory fact updated");
+      } catch (error) {
+        notify(
+          `Update failed: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    });
+  };
+
+  const handleDeleteMemory = (id: number) => {
+    startTransition(async () => {
+      try {
+        await deleteMemoryFn({ data: { id } });
+        setMemories((prev) => prev.filter((m) => m.id !== id));
+        notify("Memory fact deleted");
+      } catch (error) {
+        notify(
+          `Delete failed: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    });
+  };
+  const handleToggleReminderStatus = (id: number, currentStatus: Reminder["status"]) => {
+    const nextStatus: Reminder["status"] = currentStatus === "pending" ? "cancelled" : "pending";
+    startTransition(async () => {
+      try {
+        const updated = await updateReminderStatusFn({
+          data: { id, status: nextStatus },
+        });
+        setReminders((prev) =>
+          prev.map((r) => (r.id === id ? updated : r))
+        );
+        notify(`Reminder marked as ${nextStatus}`);
+      } catch (error) {
+        notify(
+          `Update failed: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    });
+  };
+
+  const handleDeleteReminder = (id: number) => {
+    startTransition(async () => {
+      try {
+        await deleteReminderFn({ data: { id } });
+        setReminders((prev) => prev.filter((r) => r.id !== id));
+        notify("Reminder deleted");
+      } catch (error) {
+        notify(
+          `Delete failed: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    });
+  };
   const handlePresetSelect = (preset: {
     baseUrl: string;
     model: string;
@@ -802,6 +1343,20 @@ const DashboardPage = () => {
       label: "Go to Skills",
     },
     {
+      action: () => setActiveNav("memory"),
+      group: "Navigation",
+      hint: "navigate",
+      id: "nav-memory",
+      label: "Go to Memory",
+    },
+    {
+      action: () => setActiveNav("reminders"),
+      group: "Navigation",
+      hint: "navigate",
+      id: "nav-reminders",
+      label: "Go to Reminders",
+    },
+    {
       action: () => setActiveNav("audit"),
       group: "Navigation",
       hint: "navigate",
@@ -835,10 +1390,12 @@ const DashboardPage = () => {
         collapsed={collapsed}
         dotColor={visual.dot}
         logCount={logs.length}
+        memoryCount={memories.length}
         model={settings.ai_model}
         onSelectNav={setActiveNav}
         onToggleCollapsed={() => setCollapsed((v) => !v)}
         provider={settings.ai_provider}
+        reminderCount={reminders.length}
         skillCount={skills.length}
         statusLabel={visual.label}
         toolsCount={settings.tools_enabled?.length || 0}
@@ -916,6 +1473,31 @@ const DashboardPage = () => {
               setShowSkillForm={setShowSkillForm}
               showSkillForm={showSkillForm}
               skills={skills}
+            />
+          )}
+          {activeNav === "memory" && (
+            <MemorySection
+              handleCreateMemorySubmit={handleCreateMemorySubmit}
+              handleDeleteMemory={handleDeleteMemory}
+              handleUpdateMemorySubmit={handleUpdateMemorySubmit}
+              isPending={isPending}
+              memories={memories}
+              newMemoryCategory={newMemoryCategory}
+              newMemoryFact={newMemoryFact}
+              newMemoryJid={newMemoryJid}
+              setNewMemoryCategory={setNewMemoryCategory}
+              setNewMemoryFact={setNewMemoryFact}
+              setNewMemoryJid={setNewMemoryJid}
+              setShowMemoryForm={setShowMemoryForm}
+              showMemoryForm={showMemoryForm}
+            />
+          )}
+          {activeNav === "reminders" && (
+            <RemindersSection
+              handleDeleteReminder={handleDeleteReminder}
+              handleToggleReminderStatus={handleToggleReminderStatus}
+              isPending={isPending}
+              reminders={reminders}
             />
           )}
           {activeNav === "audit" && <AuditSection logs={logs} />}

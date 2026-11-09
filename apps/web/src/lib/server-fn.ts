@@ -1,4 +1,11 @@
-import { getAuditLogs, getBotState, getSettings, getSkills } from "@kynos/db";
+import {
+  getAllReminders,
+  getAllUserFacts,
+  getAuditLogs,
+  getBotState,
+  getSettings,
+  getSkills,
+} from "@kynos/db";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 
@@ -28,6 +35,8 @@ export const getDashboardDataFn = createServerFn({ method: "GET" }).handler(
 
     return Promise.resolve({
       logs: getAuditLogs(20),
+      memories: getAllUserFacts(),
+      reminders: getAllReminders(100),
       settings: getSettings(),
       skills: getSkills(),
       state: getBotState(),

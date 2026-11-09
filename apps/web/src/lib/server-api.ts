@@ -2,11 +2,15 @@ import type {
   AppSettings,
   AuditLog,
   BotState,
+  Reminder,
   SkillRecord,
+  UserFact,
 } from "@kynos/shared";
 
 export interface DashboardData {
   logs: AuditLog[];
+  memories: UserFact[];
+  reminders: Reminder[];
   settings: AppSettings;
   skills: SkillRecord[];
   state: BotState;
@@ -111,6 +115,74 @@ export const deleteSkillFn = async ({
 }): Promise<{ success: boolean }> => {
   const res = await fetch("/api/dashboard", {
     body: JSON.stringify({ action: "delete_skill", payload: data }),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  });
+  const json = (await res.json()) as { ok: boolean };
+  return { success: json.ok };
+};
+export const createMemoryFn = async ({
+  data,
+}: {
+  data: { category?: string; fact: string; jid: string };
+}): Promise<UserFact> => {
+  const res = await fetch("/api/dashboard", {
+    body: JSON.stringify({ action: "create_memory", payload: data }),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  });
+  const json = (await res.json()) as { memory: UserFact; ok: boolean };
+  return json.memory;
+};
+
+export const updateMemoryFn = async ({
+  data,
+}: {
+  data: { category?: string; fact: string; id: number };
+}): Promise<UserFact> => {
+  const res = await fetch("/api/dashboard", {
+    body: JSON.stringify({ action: "update_memory", payload: data }),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  });
+  const json = (await res.json()) as { memory: UserFact; ok: boolean };
+  return json.memory;
+};
+
+export const deleteMemoryFn = async ({
+  data,
+}: {
+  data: { id: number };
+}): Promise<{ success: boolean }> => {
+  const res = await fetch("/api/dashboard", {
+    body: JSON.stringify({ action: "delete_memory", payload: data }),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  });
+  const json = (await res.json()) as { ok: boolean };
+  return { success: json.ok };
+};
+export const updateReminderStatusFn = async ({
+  data,
+}: {
+  data: { id: number; status: Reminder["status"] };
+}): Promise<Reminder> => {
+  const res = await fetch("/api/dashboard", {
+    body: JSON.stringify({ action: "update_reminder_status", payload: data }),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  });
+  const json = (await res.json()) as { ok: boolean; reminder: Reminder };
+  return json.reminder;
+};
+
+export const deleteReminderFn = async ({
+  data,
+}: {
+  data: { id: number };
+}): Promise<{ success: boolean }> => {
+  const res = await fetch("/api/dashboard", {
+    body: JSON.stringify({ action: "delete_reminder", payload: data }),
     headers: { "Content-Type": "application/json" },
     method: "POST",
   });

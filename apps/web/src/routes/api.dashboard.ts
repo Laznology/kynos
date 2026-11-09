@@ -1,14 +1,21 @@
 import {
+  addUserFact,
   createSkill,
+  deleteReminder,
   deleteSkill,
+  deleteUserFact,
+  getAllReminders,
+  getAllUserFacts,
   getAuditLogs,
   getBotState,
   getSettings,
   getSkills,
   toggleSkill,
+  updateReminderStatus,
   updateSettings,
+  updateUserFact,
 } from "@kynos/db";
-import type { AppSettings } from "@kynos/shared";
+import type { AppSettings, Reminder } from "@kynos/shared";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { getSessionFromRequest } from "../lib/auth";
@@ -20,13 +27,15 @@ export const Route = createFileRoute("/api/dashboard")({
         if (!getSessionFromRequest(request)) {
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
-        const payload = {
-          logs: getAuditLogs(100),
-          settings: getSettings(),
-          skills: getSkills(),
-          state: getBotState(),
-        };
-        return Response.json(payload);
+      const payload = {
+        logs: getAuditLogs(100),
+        memories: getAllUserFacts(),
+        reminders: getAllReminders(100),
+        settings: getSettings(),
+        skills: getSkills(),
+        state: getBotState(),
+      };
+      return Response.json(payload);
       },
       POST: async ({ request }) => {
         if (!getSessionFromRequest(request)) {
@@ -73,6 +82,42 @@ export const Route = createFileRoute("/api/dashboard")({
           if (body.action === "delete_skill") {
             const { name } = body.payload as { name: string };
             deleteSkill(name);
+            return Response.json({ ok: true });
+          }
+          if (body.action === "create_memory") {
+            const { category, fact, jid } = body.payload as {
+              category?: string;
+              fact: string;
+              jid: string;
+            };
+            const created = addUserFact(jid, fact, category || "general");
+            return Response.json({ memory: created, ok: true });
+          }
+          if (body.action === "update_memory") {
+            const { category, fact, id } = body.payload as {
+              category?: string;
+              fact: string;
+              id: number;
+            };
+            const updated = updateUserFact(id, fact, category || "general");
+            return Response.json({ memory: updated, ok: true });
+          }
+          if (body.action === "delete_memory") {
+            const { id } = body.payload as { id: number };
+            deleteUserFact(id);
+            return Response.json({ ok: true });
+          }
+          if (body.action === "update_reminder_status") {
+            const { id, status } = body.payload as {
+              id: number;
+              status: Reminder["status"];
+            };
+            const updated = updateReminderStatus(id, status);
+            return Response.json({ ok: true, reminder: updated });
+          }
+          if (body.action === "delete_reminder") {
+            const { id } = body.payload as { id: number };
+            deleteReminder(id);
             return Response.json({ ok: true });
           }
           if (body.action === "restart_bot") {

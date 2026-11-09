@@ -463,6 +463,23 @@ export const getUserFacts = (jid: string): UserFact[] => {
   }));
 };
 
+export const getAllUserFacts = (): UserFact[] => {
+  initDatabase();
+  const rows = db
+    .select()
+    .from(schema.userFactsTable)
+    .orderBy(desc(schema.userFactsTable.createdAt))
+    .all();
+
+  return rows.map((r) => ({
+    category: r.category,
+    created_at: r.createdAt,
+    fact: r.fact,
+    id: r.id,
+    jid: r.jid,
+  }));
+};
+
 export const addUserFact = (
   jid: string,
   fact: string,
@@ -495,6 +512,31 @@ export const deleteUserFact = (id: number): void => {
   db.delete(schema.userFactsTable)
     .where(eq(schema.userFactsTable.id, id))
     .run();
+};
+
+export const updateUserFact = (
+  id: number,
+  fact: string,
+  category = "general"
+): UserFact | null => {
+  initDatabase();
+  const updated = db
+    .update(schema.userFactsTable)
+    .set({ category, fact })
+    .where(eq(schema.userFactsTable.id, id))
+    .returning()
+    .get();
+
+  if (!updated) {
+    return null;
+  }
+  return {
+    category: updated.category,
+    created_at: updated.createdAt,
+    fact: updated.fact,
+    id: updated.id,
+    jid: updated.jid,
+  };
 };
 
 export const addReminder = (
@@ -552,6 +594,93 @@ export const markReminderSent = (id: number): void => {
   initDatabase();
   db.update(schema.remindersTable)
     .set({ status: "sent" })
+    .where(eq(schema.remindersTable.id, id))
+    .run();
+};
+
+export const getAllReminders = (limit = 100): Reminder[] => {
+  initDatabase();
+  const rows = db
+    .select()
+    .from(schema.remindersTable)
+    .orderBy(desc(schema.remindersTable.createdAt))
+    .limit(limit)
+    .all();
+
+  return rows.map((r) => ({
+    created_at: r.createdAt,
+    id: r.id,
+    jid: r.jid,
+    remind_at: r.remindAt,
+    status: (r.status as Reminder["status"]) || "pending",
+    task: r.task,
+  }));
+};
+
+export const updateReminderStatus = (
+  id: number,
+  status: Reminder["status"]
+): Reminder | null => {
+  initDatabase();
+  const updated = db
+    .update(schema.remindersTable)
+    .set({ status })
+    .where(eq(schema.remindersTable.id, id))
+    .returning()
+    .get();
+
+  if (!updated) {
+    return null;
+  }
+  return {
+    created_at: updated.createdAt,
+    id: updated.id,
+    jid: updated.jid,
+    remind_at: updated.remindAt,
+    status: (updated.status as Reminder["status"]) || "pending",
+    task: updated.task,
+  };
+};
+
+export const updateReminder = (
+  id: number,
+  fields: { remindAt?: number; status?: Reminder["status"]; task?: string }
+): Reminder | null => {
+  initDatabase();
+  const updateValues: Record<string, unknown> = {};
+  if (fields.task !== undefined) {
+    updateValues.task = fields.task;
+  }
+  if (fields.remindAt !== undefined) {
+    updateValues.remindAt = fields.remindAt;
+  }
+  if (fields.status !== undefined) {
+    updateValues.status = fields.status;
+  }
+
+  const updated = db
+    .update(schema.remindersTable)
+    .set(updateValues)
+    .where(eq(schema.remindersTable.id, id))
+    .returning()
+    .get();
+
+  if (!updated) {
+    return null;
+  }
+  return {
+    created_at: updated.createdAt,
+    id: updated.id,
+    jid: updated.jid,
+    remind_at: updated.remindAt,
+    status: (updated.status as Reminder["status"]) || "pending",
+    task: updated.task,
+  };
+};
+
+export const deleteReminder = (id: number): void => {
+  initDatabase();
+  db.delete(schema.remindersTable)
     .where(eq(schema.remindersTable.id, id))
     .run();
 };

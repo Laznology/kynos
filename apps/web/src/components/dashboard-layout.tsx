@@ -1,12 +1,14 @@
 import type { AuditLog } from "@kynos/shared";
 import {
   ArrowCounterClockwise,
+  Bell,
   Brain,
   CaretLeft,
   CaretRight,
   ChatCircleText,
   ClockCounterClockwise,
   Code,
+  Database,
   MagnifyingGlass,
   Wrench,
   X,
@@ -32,6 +34,8 @@ export type NavSection =
   | "ai_runtime"
   | "tools"
   | "skills"
+  | "memory"
+  | "reminders"
   | "audit";
 
 interface NavItem {
@@ -57,10 +61,12 @@ export const SidebarNav = ({
   collapsed,
   dotColor,
   logCount,
+  memoryCount,
   model,
   onSelectNav,
   onToggleCollapsed,
   provider,
+  reminderCount,
   skillCount,
   statusLabel,
   toolsCount,
@@ -69,10 +75,12 @@ export const SidebarNav = ({
   collapsed: boolean;
   dotColor: string;
   logCount: number;
+  memoryCount?: number;
   model: string;
   onSelectNav: (n: NavSection) => void;
   onToggleCollapsed: () => void;
   provider: string;
+  reminderCount?: number;
   skillCount: number;
   statusLabel: string;
   toolsCount: number;
@@ -102,6 +110,18 @@ export const SidebarNav = ({
       icon: <Code className="h-4 w-4" />,
       id: "skills",
       label: "Skills",
+    },
+    {
+      badge: memoryCount,
+      icon: <Database className="h-4 w-4" />,
+      id: "memory",
+      label: "Memory",
+    },
+    {
+      badge: reminderCount,
+      icon: <Bell className="h-4 w-4" />,
+      id: "reminders",
+      label: "Reminders",
     },
     {
       badge: logCount,

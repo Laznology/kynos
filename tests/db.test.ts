@@ -1,22 +1,27 @@
 import { describe, expect, it } from "bun:test";
 
 import {
-  initDatabase,
-  getSettings,
-  updateSettings,
-  getBotState,
-  updateBotState,
-  addUserFact,
-  getUserFacts,
-  deleteUserFact,
-  addReminder,
-  getDueReminders,
-  markReminderSent,
-  addChatMessage,
-  getChatHistory,
-  clearChatHistory,
   addAuditLog,
+  addChatMessage,
+  addReminder,
+  addUserFact,
+  clearChatHistory,
+  deleteReminder,
+  deleteUserFact,
+  getAllReminders,
+  getAllUserFacts,
   getAuditLogs,
+  getBotState,
+  getChatHistory,
+  getDueReminders,
+  getSettings,
+  getUserFacts,
+  initDatabase,
+  markReminderSent,
+  updateBotState,
+  updateReminderStatus,
+  updateSettings,
+  updateUserFact,
 } from "@kynos/db";
 import { AVAILABLE_TOOLS, normalizeMaxOutputTokens } from "@kynos/shared";
 
@@ -105,7 +110,7 @@ describe("Database Repository (Drizzle ORM)", () => {
     expect(connectedState.phone_number).toBe("62811111");
   });
 
-  it("should store and retrieve user facts", () => {
+  it("should store, retrieve, update, and delete user facts", () => {
     const testJid = "user1@s.whatsapp.net";
     const fact = addUserFact(testJid, "Prefers concise replies", "preference");
     expect(fact.id).toBeDefined();
@@ -113,6 +118,14 @@ describe("Database Repository (Drizzle ORM)", () => {
     const facts = getUserFacts(testJid);
     expect(facts.length).toBeGreaterThanOrEqual(1);
     expect(facts.some((f) => f.fact === "Prefers concise replies")).toBe(true);
+
+    const allFacts = getAllUserFacts();
+    expect(allFacts.some((f) => f.id === fact.id)).toBe(true);
+
+    const updated = updateUserFact(fact.id as number, "Prefers super concise replies", "custom");
+    expect(updated).not.toBeNull();
+    expect(updated?.fact).toBe("Prefers super concise replies");
+    expect(updated?.category).toBe("custom");
 
     deleteUserFact(fact.id as number);
     const factsAfter = getUserFacts(testJid);
@@ -131,9 +144,19 @@ describe("Database Repository (Drizzle ORM)", () => {
     const due = getDueReminders();
     expect(due.some((r) => r.id === reminder.id)).toBe(true);
 
+    const all = getAllReminders(100);
+    expect(all.some((r) => r.id === reminder.id)).toBe(true);
+
+    const updated = updateReminderStatus(reminder.id as number, "cancelled");
+    expect(updated?.status).toBe("cancelled");
+
     markReminderSent(reminder.id as number);
     const dueAfter = getDueReminders();
     expect(dueAfter.some((r) => r.id === reminder.id)).toBe(false);
+
+    deleteReminder(reminder.id as number);
+    const allAfter = getAllReminders(100);
+    expect(allAfter.some((r) => r.id === reminder.id)).toBe(false);
   });
 
   it("should handle chat history storage and clearing", () => {

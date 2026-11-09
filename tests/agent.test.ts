@@ -11,6 +11,7 @@ import {
 import {
   browserAutomationTool,
   calculatorTool,
+  createReminderTool,
   datetimeTool,
   getAgentTools,
 } from "../apps/bot/src/agent/tools";
@@ -156,5 +157,46 @@ describe("Agent Core & Tools (Vercel AI SDK)", () => {
     expect(quoteOnly).toBe(
       '[Quoted message from 628111]:\n"Catatan penting meeting"'
     );
+  });
+
+  it("should schedule reminder and trigger sendEvent with duration and location", async () => {
+    let sentEvent: {
+      description?: string;
+      endDate?: Date;
+      isCancelled?: boolean;
+      location?: { degreesLatitude: number; degreesLongitude: number; name?: string };
+      name: string;
+      startDate: Date;
+    } | null = null;
+    const tool = createReminderTool({
+      jid: "user-reminder@s.whatsapp.net",
+      sendEvent: (ev) => {
+        sentEvent = ev;
+        return Promise.resolve();
+      },
+    });
+
+    const res = await tool.execute(
+      { delay_minutes: 30, duration_minutes: 60, location_name: "Ruang Meeting A", task: "Meeting evaluasi" },
+      { context: {}, messages: [], toolCallId: "test-reminder" }
+    );
+    const parsed = destr<{
+      delay_minutes: number;
+      duration_minutes: number;
+      event_created: boolean;
+      location: string;
+      success: boolean;
+      task: string;
+    }>(res);
+
+    expect(parsed.success).toBe(true);
+    expect(parsed.task).toBe("Meeting evaluasi");
+    expect(parsed.duration_minutes).toBe(60);
+    expect(parsed.location).toBe("Ruang Meeting A");
+    expect(parsed.event_created).toBe(true);
+    expect(sentEvent).not.toBeNull();
+    expect(sentEvent?.name).toBe("Meeting evaluasi");
+    expect(sentEvent?.location?.name).toBe("Ruang Meeting A");
+    expect(sentEvent?.endDate).toBeDefined();
   });
 });

@@ -646,11 +646,25 @@ export class KynosWhatsAppBot {
       jid,
       prompt,
       {
+        groupParticipants,
         isGroup,
         jid,
-        groupParticipants,
         mediaBuffer: visionMedia,
         mediaMimetype: visionMedia ? "image/png" : undefined,
+        sendEvent: async (event) => {
+          if (this.sock) {
+            await this.sock.sendMessage(jid, {
+              event: {
+                description: event.description,
+                endDate: event.endDate,
+                isCancelled: event.isCancelled,
+                location: event.location,
+                name: event.name,
+                startDate: event.startDate,
+              },
+            });
+          }
+        },
         senderName,
       },
       reply
@@ -669,7 +683,7 @@ export class KynosWhatsAppBot {
         try {
           if (this.sock) {
             await this.sock.sendMessage(item.jid, {
-              text: `*PENGINGAT KYNOS*\n\n"${item.task}"\n\n_Pengingat otomatis dijadwalkan oleh Anda._`,
+              text: item.task,
             });
             markReminderSent(item.id as number);
             addAuditLog("info", "bot", `Reminder sent to ${item.jid}`, {
