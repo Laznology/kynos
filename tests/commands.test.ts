@@ -1,6 +1,12 @@
 import { describe, expect, it } from "bun:test";
 
-import { getSettings, updateSettings } from "@kynos/db";
+import {
+  addReminder,
+  getRemindersByJid,
+  getSettings,
+  updateReminderStatus,
+  updateSettings,
+} from "@kynos/db";
 
 import { COMMAND_MAP, dispatchCommand } from "../apps/bot/src/commands";
 import type { CommandContext } from "../apps/bot/src/commands";
@@ -163,5 +169,55 @@ describe("Slash Commands Dispatcher", () => {
     expect(getSettings().ai_model).toBe("nousresearch/hermes-3-llama-3.1-8b");
 
     updateSettings({ ai_model: original.ai_model });
+  });
+
+  it("should keep reminder management scoped to the current chat", async () => {
+    const privateReminder = addReminder(
+      "private-user@s.whatsapp.net",
+      "Private task",
+      Date.now() + 60_000
+    );
+    const groupReminder = addReminder(
+      "team@g.us",
+      "Group task",
+      Date.now() + 60_000
+    );
+    const replies: string[] = [];
+    const baseContext: CommandContext = {
+      args: ["cancel", String(privateReminder.id)],
+      commandName: "reminder",
+      fullText: `/reminder cancel ${privateReminder.id}`,
+      isGroup: false,
+      jid: "private-user@s.whatsapp.net",
+      reply: (text) => {
+        replies.push(text);
+        return Promise.resolve();
+      },
+      replyMedia: () => Promise.resolve(),
+      sender: "private-user@s.whatsapp.net",
+    };
+
+    await dispatchCommand("reminder", baseContext);
+    expect(replies.at(-1)).toContain("berhasil dibatalkan");
+    expect(getRemindersByJid("private-user@s.whatsapp.net")[0]?.status).toBe(
+      "cancelled"
+    );
+
+    replies.length = 0;
+    await dispatchCommand("reminder", {
+      ...baseContext,
+      args: ["cancel", String(groupReminder.id)],
+      fullText: `/reminder cancel ${groupReminder.id}`,
+    });
+    expect(replies.at(-1)).toContain("scope chat ini");
+    expect(
+      getRemindersByJid("team@g.us").find(
+        (reminder) => reminder.id === groupReminder.id
+      )?.status
+    ).toBe("pending");
+
+    if (groupReminder.id) {
+      updateReminderStatus(groupReminder.id, "cancelled");
+    }
   });
 });

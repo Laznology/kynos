@@ -21,7 +21,7 @@ import {
   normalizeUserJid,
 } from "@kynos/shared";
 import { destr } from "destr";
-import { asc, desc, eq, lte } from "drizzle-orm";
+import { and, asc, desc, eq, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 
 import * as schema from "./schema";
@@ -617,6 +617,26 @@ export const getAllReminders = (limit = 100): Reminder[] => {
   }));
 };
 
+export const getRemindersByJid = (jid: string, limit = 100): Reminder[] => {
+  initDatabase();
+  const rows = db
+    .select()
+    .from(schema.remindersTable)
+    .where(eq(schema.remindersTable.jid, jid))
+    .orderBy(desc(schema.remindersTable.createdAt))
+    .limit(limit)
+    .all();
+
+  return rows.map((r) => ({
+    created_at: r.createdAt,
+    id: r.id,
+    jid: r.jid,
+    remind_at: r.remindAt,
+    status: (r.status as Reminder["status"]) || "pending",
+    task: r.task,
+  }));
+};
+
 export const updateReminderStatus = (
   id: number,
   status: Reminder["status"]
@@ -626,6 +646,34 @@ export const updateReminderStatus = (
     .update(schema.remindersTable)
     .set({ status })
     .where(eq(schema.remindersTable.id, id))
+    .returning()
+    .get();
+
+  if (!updated) {
+    return null;
+  }
+  return {
+    created_at: updated.createdAt,
+    id: updated.id,
+    jid: updated.jid,
+    remind_at: updated.remindAt,
+    status: (updated.status as Reminder["status"]) || "pending",
+    task: updated.task,
+  };
+};
+
+export const updateReminderStatusByJid = (
+  id: number,
+  jid: string,
+  status: Reminder["status"]
+): Reminder | null => {
+  initDatabase();
+  const updated = db
+    .update(schema.remindersTable)
+    .set({ status })
+    .where(
+      and(eq(schema.remindersTable.id, id), eq(schema.remindersTable.jid, jid))
+    )
     .returning()
     .get();
 

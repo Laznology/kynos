@@ -29,6 +29,7 @@ _Autonomous Intelligence & Media Suite_
 - *${prefix}temperature [0-2]*: Atur kreativitas model (owner).
 - *${prefix}tokens [jumlah]*: Atur batas output token (owner).
 - *${prefix}tools [list|enable|disable] [id]*: Kelola tools AI (owner).
+- *${prefix}reminder [list|cancel] [id]*: Audit atau batalkan reminder chat ini.
 
 *FITUR AI AGENT:*
 Kirim pesan langsung (atau mention di grup) untuk berinteraksi dengan AI:
