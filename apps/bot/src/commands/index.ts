@@ -7,6 +7,7 @@ import {
   tokensCommand,
   toolsCommand,
 } from "./management";
+import { reminderCommand } from "./reminder";
 import { smemeCommand, smemeImgCommand } from "./smeme";
 import { stickerCommand, takeCommand } from "./sticker";
 import { toGifCommand, toImgCommand, toMp4Command } from "./toimg";
@@ -32,6 +33,7 @@ export const COMMAND_LIST: CommandHandler[] = [
   temperatureCommand,
   tokensCommand,
   toolsCommand,
+  reminderCommand,
 ];
 
 export const COMMAND_MAP = new Map<string, CommandHandler>();
