@@ -8,6 +8,7 @@ import {
   clearChatHistory,
   deleteReminder,
   deleteUserFact,
+  exportDatabaseSnapshot,
   getAllReminders,
   getAllUserFacts,
   getAuditLogs,
@@ -17,6 +18,7 @@ import {
   getSettings,
   getUserFacts,
   initDatabase,
+  importDatabaseSnapshot,
   markReminderSent,
   updateBotState,
   updateReminderStatus,
@@ -27,6 +29,18 @@ import { AVAILABLE_TOOLS, normalizeMaxOutputTokens } from "@kynos/shared";
 
 describe("Database Repository (Drizzle ORM)", () => {
   initDatabase();
+
+  it("should export and import a complete database snapshot", () => {
+    const snapshot = exportDatabaseSnapshot();
+    expect(snapshot.version).toBe(1);
+    expect(snapshot.tables.settings.length).toBeGreaterThan(0);
+    expect(snapshot.tables.botState).toHaveLength(1);
+
+    importDatabaseSnapshot(snapshot);
+    expect(exportDatabaseSnapshot().tables.settings.length).toBe(
+      snapshot.tables.settings.length
+    );
+  });
 
   it("should initialize default settings and persist updates", () => {
     const s = getSettings();

@@ -18,7 +18,7 @@
     },
     "apps/bot": {
       "name": "@kynos/bot",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "dependencies": {
         "@ai-sdk/openai": "^4.0.103",
         "@hapi/boom": "^10.0.1",
@@ -42,7 +42,7 @@
     },
     "apps/web": {
       "name": "@kynos/web",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "dependencies": {
         "@kynos/db": "workspace:*",
         "@kynos/shared": "workspace:*",
@@ -78,7 +78,7 @@
     },
     "packages/db": {
       "name": "@kynos/db",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "dependencies": {
         "@kynos/shared": "workspace:*",
         "destr": "^2.0.5",
@@ -90,7 +90,7 @@
     },
     "packages/shared": {
       "name": "@kynos/shared",
-      "version": "1.4.0",
+      "version": "1.4.1",
     },
   },
   "packages": {

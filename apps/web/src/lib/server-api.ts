@@ -37,6 +37,19 @@ export const fetchDashboardData = async (): Promise<DashboardData> => {
   return (await res.json()) as DashboardData;
 };
 
+export const importDatabaseFn = async (file: File): Promise<void> => {
+  const formData = new FormData();
+  formData.set("database", file);
+  const res = await fetch("/api/dashboard", {
+    body: formData,
+    method: "POST",
+  });
+  const result = (await res.json()) as { error?: string; ok?: boolean };
+  if (!res.ok || !result.ok) {
+    throw new Error(result.error || "Database import failed");
+  }
+};
+
 export const fetchAvailableModels = async (
   baseUrl?: string,
   apiKey?: string

@@ -4,12 +4,14 @@ import {
   deleteReminder,
   deleteSkill,
   deleteUserFact,
+  exportDatabaseSnapshot,
   getAllReminders,
   getAllUserFacts,
   getAuditLogs,
   getBotState,
   getSettings,
   getSkills,
+  importDatabaseSnapshot,
   toggleSkill,
   updateReminderStatus,
   updateSettings,
@@ -27,21 +29,38 @@ export const Route = createFileRoute("/api/dashboard")({
         if (!getSessionFromRequest(request)) {
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
-      const payload = {
-        logs: getAuditLogs(100),
-        memories: getAllUserFacts(),
-        reminders: getAllReminders(100),
-        settings: getSettings(),
-        skills: getSkills(),
-        state: getBotState(),
-      };
-      return Response.json(payload);
+        if (new URL(request.url).searchParams.get("export") === "database") {
+          return new Response(JSON.stringify(exportDatabaseSnapshot(), null, 2), {
+            headers: {
+              "Content-Disposition": `attachment; filename="kynos-database-${new Date().toISOString().slice(0, 10)}.json"`,
+              "Content-Type": "application/json",
+            },
+          });
+        }
+        const payload = {
+          logs: getAuditLogs(100),
+          memories: getAllUserFacts(),
+          reminders: getAllReminders(100),
+          settings: getSettings(),
+          skills: getSkills(),
+          state: getBotState(),
+        };
+        return Response.json(payload);
       },
       POST: async ({ request }) => {
         if (!getSessionFromRequest(request)) {
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
         try {
+          if (request.headers.get("content-type")?.includes("multipart/form-data")) {
+            const formData = await request.formData();
+            const file = formData.get("database");
+            if (!(file instanceof File)) {
+              return Response.json({ error: "Database file is required." }, { status: 400 });
+            }
+            importDatabaseSnapshot(JSON.parse(await file.text()));
+            return Response.json({ ok: true, message: "Database imported successfully." });
+          }
           const body = (await request.json()) as {
             action: string;
             payload?: unknown;

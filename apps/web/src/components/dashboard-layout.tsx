@@ -36,7 +36,8 @@ export type NavSection =
   | "skills"
   | "memory"
   | "reminders"
-  | "audit";
+  | "audit"
+  | "database";
 
 interface NavItem {
   badge?: string | number;
@@ -128,6 +129,11 @@ export const SidebarNav = ({
       icon: <ClockCounterClockwise className="h-4 w-4" />,
       id: "audit",
       label: "Audit",
+    },
+    {
+      icon: <Database className="h-4 w-4" />,
+      id: "database",
+      label: "Database",
     },
   ];
 

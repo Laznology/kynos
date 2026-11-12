@@ -15,6 +15,7 @@ import {
   Clock,
   Code,
   Database,
+  DownloadSimple,
   FloppyDisk,
   PencilSimple,
   Plus,
@@ -23,6 +24,7 @@ import {
   Terminal,
   TerminalWindow,
   Trash,
+  UploadSimple,
   UsersThree,
   Wrench,
 } from "@phosphor-icons/react";
@@ -50,6 +52,7 @@ import {
   deleteSkillFn,
   fetchAvailableModels,
   fetchDashboardData,
+  importDatabaseFn,
   saveSettingsFn,
   toggleSkillFn,
   triggerBotRestartFn,
@@ -79,6 +82,7 @@ const NAV_SECTIONS: { id: NavSection; keywords: string; label: string }[] = [
   { id: "memory", keywords: "memory facts preferences context user", label: "Memory" },
   { id: "reminders", keywords: "reminders events queue calendar task", label: "Reminders" },
   { id: "audit", keywords: "log history event execution", label: "Audit" },
+  { id: "database", keywords: "database export import backup restore", label: "Database" },
 ];
 
 const getStatusVisual = (status: BotStatus) => {
@@ -1015,6 +1019,77 @@ const RemindersSection = ({
   );
 };
 
+const DatabaseSection = ({
+  isPending,
+  notify,
+}: {
+  isPending: boolean;
+  notify: (message: string) => void;
+}) => {
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+    startTransition(async () => {
+      try {
+        await importDatabaseFn(file);
+        notify("Database imported. Reloading dashboard...");
+        window.location.reload();
+      } catch (error) {
+        notify(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    });
+  };
+  const [isPendingImport, startTransition] = useTransition();
+
+  return (
+    <div className="border-border bg-card rounded-2xl border shadow-sm">
+      <div className="border-border flex items-center gap-2 border-b px-5 py-3.5">
+        <Database className="text-muted-foreground h-4 w-4" />
+        <h2 className="text-foreground text-sm font-semibold tracking-tight">
+          Database Export & Import
+        </h2>
+      </div>
+      <div className="space-y-4 p-5">
+        <p className="text-muted-foreground max-w-2xl text-xs leading-relaxed">
+          Export seluruh settings, memory, reminders, audit logs, skills, dan state
+          menjadi snapshot JSON. Import akan mengganti isi database saat ini secara
+          atomik setelah file tervalidasi.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild disabled={isPending || isPendingImport} variant="outline">
+            <a href="/api/dashboard?export=database" download>
+              <DownloadSimple className="h-3.5 w-3.5" />
+              Export Database
+            </a>
+          </Button>
+          <Button
+            disabled={isPending || isPendingImport}
+            onClick={() => document.getElementById("database-import")?.click()}
+            variant="outline"
+          >
+            <UploadSimple className="h-3.5 w-3.5" />
+            {isPendingImport ? "Importing..." : "Import Database"}
+          </Button>
+          <input
+            accept="application/json,.json"
+            className="hidden"
+            id="database-import"
+            onChange={handleImport}
+            type="file"
+          />
+        </div>
+        <p className="text-muted-foreground text-[11px]">
+          Gunakan hanya file export Kynos yang terpercaya. Import akan memuat ulang
+          dashboard setelah berhasil.
+        </p>
+      </div>
+    </div>
+  );
+};
+
 const DashboardPage = () => {
   const initialData = Route.useLoaderData();
   const [activeNav, setActiveNav] = useState<NavSection>("gateway");
@@ -1501,6 +1576,9 @@ const DashboardPage = () => {
             />
           )}
           {activeNav === "audit" && <AuditSection logs={logs} />}
+          {activeNav === "database" && (
+            <DatabaseSection isPending={isPending} notify={notify} />
+          )}
         </div>
       </main>
 

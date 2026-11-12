@@ -83,6 +83,226 @@ let initialized = false;
 
 const TOOL_IDS = AVAILABLE_TOOLS.map((t) => t.id);
 
+export const DATABASE_SNAPSHOT_VERSION = 1;
+
+export interface DatabaseSnapshot {
+  exportedAt: string;
+  tables: {
+    auditLogs: Array<Record<string, unknown>>;
+    botState: Array<Record<string, unknown>>;
+    chatMemory: Array<Record<string, unknown>>;
+    reminders: Array<Record<string, unknown>>;
+    settings: Array<Record<string, unknown>>;
+    skills: Array<Record<string, unknown>>;
+    userFacts: Array<Record<string, unknown>>;
+  };
+  version: number;
+}
+
+const tableRows = (table: string): Array<Record<string, unknown>> =>
+  sqlite.query(`SELECT * FROM ${table}`).all() as Array<Record<string, unknown>>;
+
+export const exportDatabaseSnapshot = (): DatabaseSnapshot => {
+  initDatabase();
+  return {
+    exportedAt: new Date().toISOString(),
+    tables: {
+      auditLogs: tableRows("audit_logs"),
+      botState: tableRows("bot_state"),
+      chatMemory: tableRows("chat_memory"),
+      reminders: tableRows("reminders"),
+      settings: tableRows("settings"),
+      skills: tableRows("skills"),
+      userFacts: tableRows("user_facts"),
+    },
+    version: DATABASE_SNAPSHOT_VERSION,
+  };
+};
+
+const snapshotRows = (
+  value: unknown,
+  table: keyof DatabaseSnapshot["tables"]
+): Array<Record<string, unknown>> => {
+  if (!Array.isArray(value) || value.some((row) => !row || typeof row !== "object")) {
+    throw new Error(`Snapshot table "${table}" is invalid.`);
+  }
+  return value as Array<Record<string, unknown>>;
+};
+
+const requiredString = (row: Record<string, unknown>, key: string): string => {
+  if (typeof row[key] !== "string") {
+    throw new Error(`Snapshot field "${key}" is invalid.`);
+  }
+  return row[key] as string;
+};
+
+const requiredNumber = (row: Record<string, unknown>, key: string): number => {
+  if (typeof row[key] !== "number" || !Number.isFinite(row[key])) {
+    throw new Error(`Snapshot field "${key}" is invalid.`);
+  }
+  return row[key] as number;
+};
+
+export const importDatabaseSnapshot = (snapshot: unknown): void => {
+  if (!snapshot || typeof snapshot !== "object") {
+    throw new Error("Database snapshot must be an object.");
+  }
+  const data = snapshot as Partial<DatabaseSnapshot>;
+  if (data.version !== DATABASE_SNAPSHOT_VERSION || !data.tables) {
+    throw new Error(`Unsupported database snapshot version. Expected ${DATABASE_SNAPSHOT_VERSION}.`);
+  }
+
+  const settings = snapshotRows(data.tables.settings, "settings");
+  const botState = snapshotRows(data.tables.botState, "botState");
+  const chatMemory = snapshotRows(data.tables.chatMemory, "chatMemory");
+  const userFacts = snapshotRows(data.tables.userFacts, "userFacts");
+  const reminders = snapshotRows(data.tables.reminders, "reminders");
+  const auditLogs = snapshotRows(data.tables.auditLogs, "auditLogs");
+  const skills = snapshotRows(data.tables.skills, "skills");
+
+  for (const row of settings) {
+    requiredString(row, "key");
+    requiredString(row, "value");
+    requiredNumber(row, "updated_at");
+  }
+  if (botState.length !== 1 || requiredNumber(botState[0] ?? {}, "id") !== 1) {
+    throw new Error("Snapshot bot state must contain only id=1.");
+  }
+  for (const row of chatMemory) {
+    requiredNumber(row, "id");
+    requiredString(row, "jid");
+    requiredString(row, "role");
+    requiredString(row, "content");
+    requiredNumber(row, "created_at");
+  }
+  for (const row of userFacts) {
+    requiredNumber(row, "id");
+    requiredString(row, "jid");
+    requiredString(row, "fact");
+    requiredNumber(row, "created_at");
+  }
+  for (const row of reminders) {
+    requiredNumber(row, "id");
+    requiredString(row, "jid");
+    requiredString(row, "task");
+    requiredNumber(row, "remind_at");
+    requiredString(row, "status");
+    requiredNumber(row, "created_at");
+  }
+  for (const row of auditLogs) {
+    requiredNumber(row, "id");
+    requiredString(row, "level");
+    requiredString(row, "category");
+    requiredString(row, "message");
+    requiredNumber(row, "created_at");
+  }
+  for (const row of skills) {
+    requiredNumber(row, "id");
+    requiredString(row, "name");
+    requiredString(row, "description");
+    requiredString(row, "body");
+    requiredNumber(row, "created_at");
+    requiredNumber(row, "updated_at");
+  }
+
+  const tables = [
+    "settings",
+    "bot_state",
+    "chat_memory",
+    "user_facts",
+    "reminders",
+    "audit_logs",
+    "skills",
+  ];
+  sqlite.exec("BEGIN IMMEDIATE");
+  try {
+    for (const table of tables) {
+      sqlite.exec(`DELETE FROM ${table}`);
+    }
+
+    const insertRows = (
+      table: string,
+      rows: Array<Record<string, unknown>>,
+      allowedColumns: string[]
+    ) => {
+      for (const row of rows) {
+        const columns = Object.keys(row);
+        if (columns.some((column) => !allowedColumns.includes(column))) {
+          throw new Error(`Snapshot columns for "${table}" are invalid.`);
+        }
+        const placeholders = columns.map((_, index) => `$value${index}`).join(", ");
+        const query = sqlite.query(
+          `INSERT INTO ${table} (${columns.join(", ")}) VALUES (${placeholders})`
+        );
+        query.run(
+          Object.fromEntries(
+            columns.map((column, index) => [`$value${index}`, row[column]])
+          )
+        );
+      }
+    };
+
+    insertRows("settings", settings, ["key", "value", "updated_at"]);
+    insertRows("bot_state", botState, [
+      "id",
+      "status",
+      "qr_code",
+      "pairing_code",
+      "phone_number",
+      "last_connected",
+      "updated_at",
+    ]);
+    insertRows("chat_memory", chatMemory, [
+      "id",
+      "jid",
+      "role",
+      "content",
+      "thoughts",
+      "tool_calls",
+      "tool_call_id",
+      "created_at",
+    ]);
+    insertRows("user_facts", userFacts, [
+      "id",
+      "jid",
+      "fact",
+      "category",
+      "created_at",
+    ]);
+    insertRows("reminders", reminders, [
+      "id",
+      "jid",
+      "task",
+      "remind_at",
+      "status",
+      "created_at",
+    ]);
+    insertRows("audit_logs", auditLogs, [
+      "id",
+      "level",
+      "category",
+      "message",
+      "metadata",
+      "created_at",
+    ]);
+    insertRows("skills", skills, [
+      "id",
+      "name",
+      "description",
+      "body",
+      "version",
+      "enabled",
+      "source",
+      "created_at",
+      "updated_at",
+    ]);
+    sqlite.exec("COMMIT");
+  } catch (error) {
+    sqlite.exec("ROLLBACK");
+    throw error;
+  }
+};
+
 export const initDatabase = (): void => {
   if (initialized) {
     return;

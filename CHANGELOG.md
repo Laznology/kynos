@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1] - 2026-11-12
+
+### Added
+
+- Menambahkan export/import database JSON dari web dashboard.
+- Menambahkan validasi snapshot dan import atomik untuk settings, state, memory, reminders, audit logs, dan skills.
+
 ## [1.4.0] - 2026-11-12
 
 ### Added
