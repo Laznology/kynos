@@ -1,4 +1,12 @@
 import { clearCommand, helpCommand, pingCommand, statusCommand } from "./help";
+import {
+  configCommand,
+  modelCommand,
+  reasoningCommand,
+  temperatureCommand,
+  tokensCommand,
+  toolsCommand,
+} from "./management";
 import { smemeCommand, smemeImgCommand } from "./smeme";
 import { stickerCommand, takeCommand } from "./sticker";
 import { toGifCommand, toImgCommand, toMp4Command } from "./toimg";
@@ -18,6 +26,12 @@ export const COMMAND_LIST: CommandHandler[] = [
   pingCommand,
   clearCommand,
   statusCommand,
+  configCommand,
+  modelCommand,
+  reasoningCommand,
+  temperatureCommand,
+  tokensCommand,
+  toolsCommand,
 ];
 
 export const COMMAND_MAP = new Map<string, CommandHandler>();

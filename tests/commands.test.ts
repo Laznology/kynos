@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
 
+import { getSettings, updateSettings } from "@kynos/db";
+
 import { COMMAND_MAP, dispatchCommand } from "../apps/bot/src/commands";
 import type { CommandContext } from "../apps/bot/src/commands";
 
@@ -17,6 +19,13 @@ describe("Slash Commands Dispatcher", () => {
     expect(COMMAND_MAP.has("ping")).toBe(true);
     expect(COMMAND_MAP.has("clear")).toBe(true);
     expect(COMMAND_MAP.has("status")).toBe(true);
+    expect(COMMAND_MAP.has("config")).toBe(true);
+    expect(COMMAND_MAP.has("model")).toBe(true);
+    expect(COMMAND_MAP.has("reasoning")).toBe(true);
+    expect(COMMAND_MAP.has("effort")).toBe(true);
+    expect(COMMAND_MAP.has("temperature")).toBe(true);
+    expect(COMMAND_MAP.has("tokens")).toBe(true);
+    expect(COMMAND_MAP.has("tools")).toBe(true);
   });
 
   it("should dispatch /ping command and return latency info", async () => {
@@ -77,11 +86,48 @@ describe("Slash Commands Dispatcher", () => {
       isGroup: false,
       jid: "test@s.whatsapp.net",
       reply: async () => {},
-      replyMedia: async () => {},
+      replyMedia: () => Promise.resolve(),
       sender: "test@s.whatsapp.net",
     };
 
     const dispatched = await dispatchCommand("unknown", ctx);
     expect(dispatched).toBe(false);
+  });
+
+  it("should protect and update runtime reasoning settings", async () => {
+    const original = getSettings();
+    const replies: string[] = [];
+    const baseContext: CommandContext = {
+      args: ["high"],
+      commandName: "reasoning",
+      fullText: "/reasoning high",
+      isGroup: false,
+      jid: "owner@s.whatsapp.net",
+      reply: (text) => {
+        replies.push(text);
+        return Promise.resolve();
+      },
+      replyMedia: () => Promise.resolve(),
+      sender: "owner@s.whatsapp.net",
+      settings: {
+        ...original,
+        owner_jid: "owner@s.whatsapp.net",
+      },
+    };
+
+    updateSettings({ owner_jid: "owner@s.whatsapp.net" });
+    await dispatchCommand("reasoning", {
+      ...baseContext,
+      sender: "other@s.whatsapp.net",
+    });
+    expect(replies.at(-1)).toContain("hanya dapat digunakan oleh owner");
+
+    await dispatchCommand("reasoning", baseContext);
+    expect(getSettings().ai_reasoning_effort).toBe("high");
+
+    updateSettings({
+      ai_reasoning_effort: original.ai_reasoning_effort,
+      owner_jid: original.owner_jid,
+    });
   });
 });
