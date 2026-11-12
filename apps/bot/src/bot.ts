@@ -620,6 +620,7 @@ export class KynosWhatsAppBot {
       replyMedia,
       sender,
       senderName,
+      settings,
     });
     if (handled) {
       return;

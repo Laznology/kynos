@@ -23,6 +23,12 @@ _Autonomous Intelligence & Media Suite_
 - *${prefix}ping*: Cek status latensi dan runtime bot.
 - *${prefix}clear*: Reset riwayat percakapan sesi ini.
 - *${prefix}status*: Status runtime bot dan model AI aktif.
+- *${prefix}config*: Lihat konfigurasi AI aktif.
+- *${prefix}model [id]*: Lihat atau ganti model AI (owner).
+- *${prefix}reasoning [low|medium|high]*: Atur reasoning effort (owner).
+- *${prefix}temperature [0-2]*: Atur kreativitas model (owner).
+- *${prefix}tokens [jumlah]*: Atur batas output token (owner).
+- *${prefix}tools [list|enable|disable] [id]*: Kelola tools AI (owner).
 
 *FITUR AI AGENT:*
 Kirim pesan langsung (atau mention di grup) untuk berinteraksi dengan AI:

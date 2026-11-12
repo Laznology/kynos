@@ -1,3 +1,5 @@
+import type { AppSettings } from "@kynos/shared";
+
 export interface CommandContext {
   jid: string;
   sender: string;
@@ -6,6 +8,7 @@ export interface CommandContext {
   args: string[];
   fullText: string;
   commandName: string;
+  settings?: AppSettings;
   mediaBuffer?: Buffer;
   mimetype?: string;
   quoted?: {
