@@ -30,6 +30,8 @@ _Autonomous Intelligence & Media Suite_
 - *${prefix}tokens [jumlah]*: Atur batas output token (owner).
 - *${prefix}tools [list|enable|disable] [id]*: Kelola tools AI (owner).
 - *${prefix}reminder [list|cancel] [id]*: Audit atau batalkan reminder chat ini.
+- *${prefix}memory [list|forget|clear] [id]*: Kelola memory chat ini.
+- *${prefix}browser status*: Status aman browser automation.
 
 *FITUR AI AGENT:*
 Kirim pesan langsung (atau mention di grup) untuk berinteraksi dengan AI:

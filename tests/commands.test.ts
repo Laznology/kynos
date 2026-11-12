@@ -2,7 +2,10 @@ import { describe, expect, it } from "bun:test";
 
 import {
   addReminder,
+  addUserFact,
+  deleteUserFact,
   getRemindersByJid,
+  getUserFacts,
   getSettings,
   updateReminderStatus,
   updateSettings,
@@ -219,5 +222,67 @@ describe("Slash Commands Dispatcher", () => {
     if (groupReminder.id) {
       updateReminderStatus(groupReminder.id, "cancelled");
     }
+  });
+
+  it("should keep memory management scoped to the current chat", async () => {
+    const privateFact = addUserFact(
+      "private-memory@s.whatsapp.net",
+      "Private fact"
+    );
+    const groupFact = addUserFact("memory-team@g.us", "Group fact");
+    const replies: string[] = [];
+    const baseContext: CommandContext = {
+      args: ["forget", String(privateFact.id)],
+      commandName: "memory",
+      fullText: `/memory forget ${privateFact.id}`,
+      isGroup: false,
+      jid: "private-memory@s.whatsapp.net",
+      reply: (text) => {
+        replies.push(text);
+        return Promise.resolve();
+      },
+      replyMedia: () => Promise.resolve(),
+      sender: "private-memory@s.whatsapp.net",
+    };
+
+    await dispatchCommand("memory", baseContext);
+    expect(replies.at(-1)).toContain("berhasil dihapus");
+    expect(getUserFacts("private-memory@s.whatsapp.net")).toHaveLength(0);
+
+    replies.length = 0;
+    await dispatchCommand("memory", {
+      ...baseContext,
+      args: ["forget", String(groupFact.id)],
+      fullText: `/memory forget ${groupFact.id}`,
+    });
+    expect(replies.at(-1)).toContain("scope chat ini");
+    expect(
+      getUserFacts("memory-team@g.us").find((fact) => fact.id === groupFact.id)
+    ).toBeDefined();
+
+    if (groupFact.id) {
+      deleteUserFact(groupFact.id);
+    }
+  });
+
+  it("should expose safe browser status diagnostics", async () => {
+    let replyReceived = "";
+    const dispatched = await dispatchCommand("browser", {
+      args: ["status"],
+      commandName: "browser",
+      fullText: "/browser status",
+      isGroup: false,
+      jid: "browser-test@s.whatsapp.net",
+      reply: (text) => {
+        replyReceived = text;
+        return Promise.resolve();
+      },
+      replyMedia: () => Promise.resolve(),
+      sender: "browser-test@s.whatsapp.net",
+    });
+
+    expect(dispatched).toBe(true);
+    expect(replyReceived).toContain("Chromium via Playwright");
+    expect(replyReceived).toContain("Sensitive data capture: disabled");
   });
 });

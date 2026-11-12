@@ -1,3 +1,4 @@
+import { browserCommand } from "./browser";
 import { clearCommand, helpCommand, pingCommand, statusCommand } from "./help";
 import {
   configCommand,
@@ -7,6 +8,7 @@ import {
   tokensCommand,
   toolsCommand,
 } from "./management";
+import { memoryCommand } from "./memory";
 import { reminderCommand } from "./reminder";
 import { smemeCommand, smemeImgCommand } from "./smeme";
 import { stickerCommand, takeCommand } from "./sticker";
@@ -34,6 +36,8 @@ export const COMMAND_LIST: CommandHandler[] = [
   tokensCommand,
   toolsCommand,
   reminderCommand,
+  memoryCommand,
+  browserCommand,
 ];
 
 export const COMMAND_MAP = new Map<string, CommandHandler>();

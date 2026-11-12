@@ -514,6 +514,25 @@ export const deleteUserFact = (id: number): void => {
     .run();
 };
 
+export const deleteUserFactByJid = (id: number, jid: string): boolean => {
+  initDatabase();
+  const deleted = db
+    .delete(schema.userFactsTable)
+    .where(
+      and(eq(schema.userFactsTable.id, id), eq(schema.userFactsTable.jid, jid))
+    )
+    .returning()
+    .get();
+  return Boolean(deleted);
+};
+
+export const deleteUserFactsByJid = (jid: string): void => {
+  initDatabase();
+  db.delete(schema.userFactsTable)
+    .where(eq(schema.userFactsTable.jid, jid))
+    .run();
+};
+
 export const updateUserFact = (
   id: number,
   fact: string,
