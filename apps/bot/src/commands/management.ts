@@ -23,6 +23,17 @@ const requireOwner = async (ctx: CommandContext): Promise<boolean> => {
   return false;
 };
 
+const requirePrivateAccess = async (ctx: CommandContext): Promise<boolean> => {
+  const settings = getCurrentSettings(ctx);
+  if (settings.allowed_users.includes(ctx.sender.trim().toLowerCase())) {
+    return true;
+  }
+  await ctx.reply(
+    "Ganti model hanya tersedia untuk user yang terdaftar di Private Access."
+  );
+  return false;
+};
+
 const formatSettings = (ctx: CommandContext): string => {
   const settings = getCurrentSettings(ctx);
   return [
@@ -82,7 +93,7 @@ export const modelCommand: CommandHandler = {
       return;
     }
 
-    if (!(await requireOwner(ctx))) {
+    if (!(await requirePrivateAccess(ctx))) {
       return;
     }
     if (!MODEL_PATTERN.test(model)) {
