@@ -39,7 +39,7 @@ RUN bun run build
 FROM base AS bot
 # ponytail: alpine ffmpeg ships every codec (~130MB); ceiling is full build.
 # Upgrade path: minimal static ffmpeg (libwebp+x264+gif+mp4) if size matters.
-RUN apk add --no-cache chromium ffmpeg
+RUN apk add --no-cache chromium ffmpeg yt-dlp
 ENV NODE_ENV=production
 ENV KYNOS_DATA_DIR=/data
 ENV KYNOS_AUTH_DIR=/data/baileys_auth

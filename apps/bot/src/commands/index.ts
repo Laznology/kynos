@@ -1,4 +1,5 @@
 import { browserCommand } from "./browser";
+import { downloadCommand } from "./download";
 import { clearCommand, helpCommand, pingCommand, statusCommand } from "./help";
 import {
   configCommand,
@@ -38,6 +39,7 @@ export const COMMAND_LIST: CommandHandler[] = [
   reminderCommand,
   memoryCommand,
   browserCommand,
+  downloadCommand,
 ];
 
 export const COMMAND_MAP = new Map<string, CommandHandler>();

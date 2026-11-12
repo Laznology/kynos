@@ -32,6 +32,7 @@ _Autonomous Intelligence & Media Suite_
 - *${prefix}reminder [list|cancel] [id]*: Audit atau batalkan reminder chat ini.
 - *${prefix}memory [list|forget|clear] [id]*: Kelola memory chat ini.
 - *${prefix}browser status*: Status aman browser automation.
+- *${prefix}dl <link>*: Download via yt-dlp dari TikTok, Facebook, X/Twitter, Instagram, Threads, atau YouTube.
 
 *FITUR AI AGENT:*
 Kirim pesan langsung (atau mention di grup) untuk berinteraksi dengan AI:

@@ -13,8 +13,40 @@ import {
 
 import { COMMAND_MAP, dispatchCommand } from "../apps/bot/src/commands";
 import type { CommandContext } from "../apps/bot/src/commands";
+import { validateDownloadUrl } from "../apps/bot/src/media/download";
 
 describe("Slash Commands Dispatcher", () => {
+  it("should validate supported download platforms", () => {
+    expect(
+      validateDownloadUrl("https://www.youtube.com/watch?v=test").hostname
+    ).toBe("www.youtube.com");
+    expect(() => validateDownloadUrl("https://example.com/video")).toThrow(
+      "Platform belum didukung"
+    );
+    expect(() => validateDownloadUrl("javascript:alert(1)")).toThrow(
+      "URL harus menggunakan http atau https"
+    );
+  });
+
+  it("should reject /dl without invoking yt-dlp for unsupported URLs", async () => {
+    const replies: string[] = [];
+    await dispatchCommand("dl", {
+      args: ["https://example.com/video"],
+      commandName: "dl",
+      fullText: "/dl https://example.com/video",
+      isGroup: false,
+      jid: "download-test@s.whatsapp.net",
+      reply: (text) => {
+        replies.push(text);
+        return Promise.resolve();
+      },
+      replyMedia: () => Promise.resolve(),
+      sender: "download-test@s.whatsapp.net",
+    });
+
+    expect(replies.at(-1)).toContain("Platform belum didukung");
+  });
+
   it("should register all expected slash commands", () => {
     expect(COMMAND_MAP.has("sticker")).toBe(true);
     expect(COMMAND_MAP.has("s")).toBe(true);
@@ -35,6 +67,8 @@ describe("Slash Commands Dispatcher", () => {
     expect(COMMAND_MAP.has("temperature")).toBe(true);
     expect(COMMAND_MAP.has("tokens")).toBe(true);
     expect(COMMAND_MAP.has("tools")).toBe(true);
+    expect(COMMAND_MAP.has("dl")).toBe(true);
+    expect(COMMAND_MAP.has("download")).toBe(true);
   });
 
   it("should dispatch /ping command and return latency info", async () => {
@@ -85,6 +119,7 @@ describe("Slash Commands Dispatcher", () => {
     expect(replyReceived).toContain("/s");
     expect(replyReceived).toContain("/smeme");
     expect(replyReceived).toContain("/toimg");
+    expect(replyReceived).toContain("/dl");
   });
 
   it("should return false for unknown commands", async () => {
