@@ -1,4 +1,4 @@
-import { addUserFact, deleteUserFact, getUserFacts } from "@kynos/db";
+import { addUserFact, deleteUserFactByJid, getUserFacts } from "@kynos/db";
 import { tool } from "ai";
 import { z } from "zod";
 
@@ -34,7 +34,12 @@ export const createMemoryTool = (context: AgentContext) =>
               error: "Missing or invalid 'fact_id' parameter for delete action",
             });
           }
-          deleteUserFact(id);
+          const deleted = deleteUserFactByJid(id, context.jid);
+          if (!deleted) {
+            return JSON.stringify({
+              error: "Fact not found in the current chat scope",
+            });
+          }
           return JSON.stringify({
             message: `Fact #${id} removed`,
             success: true,
