@@ -130,4 +130,38 @@ describe("Slash Commands Dispatcher", () => {
       owner_jid: original.owner_jid,
     });
   });
+
+  it("should restrict model changes to private access users", async () => {
+    const original = getSettings();
+    const replies: string[] = [];
+    const context: CommandContext = {
+      args: ["nousresearch/hermes-3-llama-3.1-8b"],
+      commandName: "model",
+      fullText: "/model nousresearch/hermes-3-llama-3.1-8b",
+      isGroup: true,
+      jid: "group@g.us",
+      reply: (text) => {
+        replies.push(text);
+        return Promise.resolve();
+      },
+      replyMedia: () => Promise.resolve(),
+      sender: "user@s.whatsapp.net",
+      settings: {
+        ...original,
+        allowed_users: ["allowed@s.whatsapp.net"],
+      },
+    };
+
+    await dispatchCommand("model", context);
+    expect(replies.at(-1)).toContain("Private Access");
+    expect(getSettings().ai_model).toBe(original.ai_model);
+
+    await dispatchCommand("model", {
+      ...context,
+      sender: "allowed@s.whatsapp.net",
+    });
+    expect(getSettings().ai_model).toBe("nousresearch/hermes-3-llama-3.1-8b");
+
+    updateSettings({ ai_model: original.ai_model });
+  });
 });
