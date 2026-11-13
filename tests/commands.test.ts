@@ -18,8 +18,8 @@ import { validateDownloadUrl } from "../apps/bot/src/media/download";
 describe("Slash Commands Dispatcher", () => {
   it("should validate supported download platforms", () => {
     expect(
-      validateDownloadUrl("https://www.youtube.com/watch?v=test").hostname
-    ).toBe("www.youtube.com");
+      validateDownloadUrl("https://www.facebook.com/share/r/1CdfXKYGnx/").hostname
+    ).toBe("www.facebook.com");
     expect(() => validateDownloadUrl("https://example.com/video")).toThrow(
       "Platform belum didukung"
     );

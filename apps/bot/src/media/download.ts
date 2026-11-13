@@ -83,7 +83,7 @@ const findDownloadedFile = async (directory: string): Promise<string> => {
 const runYtDlp = async (url: URL, directory: string): Promise<void> => {
   const executable = process.env.KYNOS_YTDLP_PATH || "yt-dlp";
   const outputTemplate = path.join(directory, "%(id)s.%(ext)s");
-  const process = Bun.spawn(
+  const child = Bun.spawn(
     [
       executable,
       "--no-playlist",
@@ -107,14 +107,14 @@ const runYtDlp = async (url: URL, directory: string): Promise<void> => {
     }
   );
 
-  const stderrPromise = process.stderr.text();
+  const stderrPromise = child.stderr.text();
   let timeout: ReturnType<typeof setTimeout> | undefined;
   try {
     const exitCode = await Promise.race([
-      process.exited,
+      child.exited,
       new Promise<number>((resolve) => {
         timeout = setTimeout(() => {
-          process.kill();
+          child.kill();
           resolve(-1);
         }, DOWNLOAD_TIMEOUT_MS);
       }),

@@ -21,7 +21,7 @@ export const downloadCommand: CommandHandler = {
     const inputUrl = ctx.args[0];
     if (!inputUrl) {
       await ctx.reply(
-        "Kirim link yang ingin didownload.\nContoh: */dl https://www.tiktok.com/...*"
+        "Kirim link yang ingin didownload.\nContoh: */dl https://www.facebook.com/share/r/...*"
       );
       return;
     }
