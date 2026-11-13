@@ -47,7 +47,8 @@ const formatSettings = (ctx: CommandContext): string => {
     `- Prefix: ${settings.bot_prefix}`,
     "",
     "Perintah:",
-    "/model [model-id]",
+    "/model: pilih model interaktif",
+    "/model <model-id>: ganti langsung",
     "/reasoning [low|medium|high]",
     "/temperature [0-2]",
     "/tokens [jumlah]",
@@ -84,6 +85,19 @@ export const modelCommand: CommandHandler = {
     const [model] = ctx.args;
     if (!model) {
       const settings = getCurrentSettings(ctx);
+      if (ctx.replyList) {
+        await ctx.replyList({
+          buttonText: "Pilih model",
+          description: `Model aktif: ${settings.ai_model}\nProvider aktif: ${settings.ai_provider}`,
+          rows: AI_MODEL_PRESETS.map((preset) => ({
+            description: `${preset.provider}: ${preset.description}`,
+            id: `/model-confirm ${preset.id}`,
+            title: preset.name,
+          })),
+          title: "Daftar Model Kynos",
+        });
+        return;
+      }
       const presets = AI_MODEL_PRESETS.map(
         (preset) => `- ${preset.id} (${preset.name})`
       ).join("\n");
@@ -107,6 +121,61 @@ export const modelCommand: CommandHandler = {
   },
   name: "model",
   usage: "/model [model-id]",
+};
+
+export const modelConfirmCommand: CommandHandler = {
+  description: "Confirm an interactive model selection",
+  execute: async (ctx) => {
+    const [model] = ctx.args;
+    if (!model || !MODEL_PATTERN.test(model)) {
+      await ctx.reply("Model ID tidak valid.");
+      return;
+    }
+    if (!(await requirePrivateAccess(ctx))) {
+      return;
+    }
+    if (ctx.replyButtons) {
+      await ctx.replyButtons({
+        buttons: [
+          { id: `/model-apply ${model}`, text: "Gunakan model" },
+          { id: "/model-cancel", text: "Batalkan" },
+        ],
+        text: `Model dipilih: ${model}\nKonfirmasi perubahan konfigurasi.`,
+      });
+      return;
+    }
+    await ctx.reply(`Ketik /model ${model} untuk menerapkan model ini.`);
+  },
+  name: "model-confirm",
+  usage: "/model-confirm <model-id>",
+};
+
+export const modelApplyCommand: CommandHandler = {
+  description: "Apply a confirmed interactive model selection",
+  execute: async (ctx) => {
+    const [model] = ctx.args;
+    if (!model || !MODEL_PATTERN.test(model)) {
+      await ctx.reply("Model ID tidak valid.");
+      return;
+    }
+    if (!(await requirePrivateAccess(ctx))) {
+      return;
+    }
+    updateSettings({ ai_model: model });
+    auditSettingsChange(ctx, "ai_model", model);
+    await ctx.reply(`Model aktif diubah ke: ${model}`);
+  },
+  name: "model-apply",
+  usage: "/model-apply <model-id>",
+};
+
+export const modelCancelCommand: CommandHandler = {
+  description: "Cancel an interactive model selection",
+  execute: async (ctx) => {
+    await ctx.reply("Perubahan model dibatalkan.");
+  },
+  name: "model-cancel",
+  usage: "/model-cancel",
 };
 
 export const reasoningCommand: CommandHandler = {

@@ -3,6 +3,9 @@ import { downloadCommand } from "./download";
 import { clearCommand, helpCommand, pingCommand, statusCommand } from "./help";
 import {
   configCommand,
+  modelApplyCommand,
+  modelCancelCommand,
+  modelConfirmCommand,
   modelCommand,
   reasoningCommand,
   temperatureCommand,
@@ -31,6 +34,9 @@ export const COMMAND_LIST: CommandHandler[] = [
   clearCommand,
   statusCommand,
   configCommand,
+  modelConfirmCommand,
+  modelApplyCommand,
+  modelCancelCommand,
   modelCommand,
   reasoningCommand,
   temperatureCommand,

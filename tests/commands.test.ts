@@ -69,6 +69,52 @@ describe("Slash Commands Dispatcher", () => {
     expect(COMMAND_MAP.has("tools")).toBe(true);
     expect(COMMAND_MAP.has("dl")).toBe(true);
     expect(COMMAND_MAP.has("download")).toBe(true);
+    expect(COMMAND_MAP.has("model-confirm")).toBe(true);
+    expect(COMMAND_MAP.has("model-apply")).toBe(true);
+    expect(COMMAND_MAP.has("model-cancel")).toBe(true);
+  });
+
+  it("should expose interactive model selection and confirmation", async () => {
+    const original = getSettings();
+    const rows: Array<{ id: string; title: string }> = [];
+    let buttons: Array<{ id: string; text: string }> = [];
+    const settings = {
+      ...original,
+      allowed_users: ["interactive@s.whatsapp.net"],
+    };
+    const baseContext: CommandContext = {
+      args: [],
+      commandName: "model",
+      fullText: "/model",
+      isGroup: false,
+      jid: "interactive@s.whatsapp.net",
+      reply: () => Promise.resolve(),
+      replyButtons: async (params) => {
+        buttons = params.buttons;
+      },
+      replyList: async (params) => {
+        rows.push(...params.rows);
+      },
+      replyMedia: () => Promise.resolve(),
+      sender: "interactive@s.whatsapp.net",
+      settings,
+    };
+
+    await dispatchCommand("model", baseContext);
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows[0]?.id).toStartWith("/model-confirm ");
+
+    await dispatchCommand("model-confirm", {
+      ...baseContext,
+      args: [rows[0]?.id.replace("/model-confirm ", "") || ""],
+      commandName: "model-confirm",
+      fullText: rows[0]?.id || "",
+      replyList: undefined,
+    });
+    expect(buttons.map((button) => button.text)).toEqual([
+      "Gunakan model",
+      "Batalkan",
+    ]);
   });
 
   it("should dispatch /ping command and return latency info", async () => {

@@ -157,6 +157,8 @@ const extractMessageText = (m: WAMessage["message"]): string => {
   const text =
     unwrapped.conversation ||
     unwrapped.extendedTextMessage?.text ||
+    unwrapped.buttonsResponseMessage?.selectedButtonId ||
+    unwrapped.listResponseMessage?.singleSelectReply?.selectedRowId ||
     unwrapped.imageMessage?.caption ||
     unwrapped.videoMessage?.caption ||
     unwrapped.documentMessage?.caption ||
@@ -329,6 +331,54 @@ const sendMediaMessage = async (
   await sock.sendMessage(
     jid,
     { caption, document: buffer, mimetype: "application/octet-stream" },
+    { quoted }
+  );
+};
+
+const sendInteractiveList = async (
+  sock: WASocket,
+  jid: string,
+  params: NonNullable<CommandContext["replyList"]>,
+  quoted?: WAMessage
+) => {
+  await sock.sendMessage(
+    jid,
+    {
+      buttonText: params.buttonText,
+      description: params.description,
+      footerText: "Kynos",
+      sections: [
+        {
+          rows: params.rows.map((row) => ({
+            description: row.description,
+            rowId: row.id,
+            title: row.title,
+          })),
+          title: params.title,
+        },
+      ],
+      title: params.title,
+    },
+    { quoted }
+  );
+};
+
+const sendInteractiveButtons = async (
+  sock: WASocket,
+  jid: string,
+  params: NonNullable<CommandContext["replyButtons"]>,
+  quoted?: WAMessage
+) => {
+  await sock.sendMessage(
+    jid,
+    {
+      buttons: params.buttons.map((button) => ({
+        buttonId: button.id,
+        buttonText: { displayText: button.text },
+        type: 1,
+      })),
+      text: params.text,
+    },
     { quoted }
   );
 };
@@ -600,6 +650,22 @@ export class KynosWhatsAppBot {
       }
     };
 
+    const replyList: NonNullable<CommandContext["replyList"]> = async (
+      params
+    ) => {
+      if (this.sock) {
+        await sendInteractiveList(this.sock, jid, params, msg);
+      }
+    };
+
+    const replyButtons: NonNullable<CommandContext["replyButtons"]> = async (
+      params
+    ) => {
+      if (this.sock) {
+        await sendInteractiveButtons(this.sock, jid, params, msg);
+      }
+    };
+
     const replyMedia = async (
       buffer: Buffer,
       type: "image" | "video" | "sticker" | "document",
@@ -617,6 +683,8 @@ export class KynosWhatsAppBot {
       mimetype,
       quoted,
       reply,
+      replyButtons,
+      replyList,
       replyMedia,
       sender,
       senderName,

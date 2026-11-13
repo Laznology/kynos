@@ -21,6 +21,16 @@ export interface CommandContext {
     isFromMe?: boolean;
   };
   reply: (text: string) => Promise<void>;
+  replyList?: (params: {
+    buttonText: string;
+    description: string;
+    rows: Array<{ description?: string; id: string; title: string }>;
+    title: string;
+  }) => Promise<void>;
+  replyButtons?: (params: {
+    buttons: Array<{ id: string; text: string }>;
+    text: string;
+  }) => Promise<void>;
   replyMedia: (
     buffer: Buffer,
     type: "image" | "video" | "sticker" | "document",
