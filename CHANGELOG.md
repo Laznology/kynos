@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.4.2] - 2026-11-16
+
+- Membuat fitur download berjalan langsung tanpa bergantung pada model API.
+
 ## [1.4.1] - 2026-11-12
 
 ### Added

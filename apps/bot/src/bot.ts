@@ -32,7 +32,8 @@ import { formatUserPrompt } from "./agent/prompt";
 import type { AgentContext } from "./agent/types";
 import { dispatchCommand } from "./commands";
 import type { CommandContext } from "./commands";
-import { stickerToImage } from "./media";
+import { downloadCommand } from "./commands/download";
+import { findDownloadUrl, isDownloadRequest, stickerToImage } from "./media";
 import {
   buildAccessDeniedReply,
   isBotTriggered,
@@ -692,6 +693,30 @@ export class KynosWhatsAppBot {
     });
     if (handled) {
       return;
+    }
+
+    if (isDownloadRequest(text)) {
+      const downloadUrl = findDownloadUrl(text);
+      if (downloadUrl) {
+        await downloadCommand.execute({
+          isGroup,
+          jid,
+          args: [downloadUrl],
+          commandName: "dl",
+          fullText: text,
+          mediaBuffer,
+          mimetype,
+          quoted,
+          reply,
+          replyButtons,
+          replyList,
+          replyMedia,
+          sender,
+          senderName,
+          settings,
+        });
+        return;
+      }
     }
 
     const currentMessage = unwrapMessage(msg.message);
