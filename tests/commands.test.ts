@@ -13,7 +13,11 @@ import {
 
 import { COMMAND_MAP, dispatchCommand } from "../apps/bot/src/commands";
 import type { CommandContext } from "../apps/bot/src/commands";
-import { validateDownloadUrl } from "../apps/bot/src/media/download";
+import {
+  findDownloadUrl,
+  isDownloadRequest,
+  validateDownloadUrl,
+} from "../apps/bot/src/media/download";
 
 describe("Slash Commands Dispatcher", () => {
   it("should validate supported download platforms", () => {
@@ -26,6 +30,15 @@ describe("Slash Commands Dispatcher", () => {
     expect(() => validateDownloadUrl("javascript:alert(1)")).toThrow(
       "URL harus menggunakan http atau https"
     );
+  });
+
+  it("should detect download requests without requiring the AI agent", () => {
+    const url = "https://www.youtube.com/watch?v=BaW_jenozKc";
+    expect(findDownloadUrl(`download ${url}`)).toBe(url);
+    expect(isDownloadRequest(url)).toBe(true);
+    expect(isDownloadRequest(`unduh ${url}`)).toBe(true);
+    expect(isDownloadRequest("tolong jelaskan video ini")).toBe(false);
+    expect(isDownloadRequest("download https://example.com/video")).toBe(false);
   });
 
   it("should reject /dl without invoking yt-dlp for unsupported URLs", async () => {

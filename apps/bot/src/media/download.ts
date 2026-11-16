@@ -18,6 +18,9 @@ const SUPPORTED_HOSTS = [
   "youtube-nocookie.com",
 ];
 
+const DOWNLOAD_INTENT_PATTERN =
+  /^(?:download|downloadkan|unduh|ambil|dl)\b/iu;
+
 export interface DownloadedMedia {
   buffer: Buffer;
   mimeType: string;
@@ -29,6 +32,27 @@ const isSupportedHost = (hostname: string): boolean => {
   return SUPPORTED_HOSTS.some(
     (host) => normalized === host || normalized.endsWith(`.${host}`)
   );
+};
+
+export const findDownloadUrl = (text: string): string | undefined => {
+  const candidate = text
+    .match(/https?:\/\/[^\s<>"']+/iu)?.[0]
+    ?.replace(/[),.!?]+$/u, "");
+  if (!candidate) {
+    return undefined;
+  }
+
+  try {
+    return isSupportedHost(new URL(candidate).hostname) ? candidate : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+export const isDownloadRequest = (text: string): boolean => {
+  const trimmed = text.trim();
+  const url = findDownloadUrl(trimmed);
+  return Boolean(url && (trimmed === url || DOWNLOAD_INTENT_PATTERN.test(trimmed)));
 };
 
 export const validateDownloadUrl = (value: string): URL => {
